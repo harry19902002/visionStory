@@ -94,4 +94,14 @@ describe('llm test connection', () => {
     expect(result.model).toBe('Qwen/Qwen3-32B')
     expect(result.answer).toBe('balance=9.8000')
   })
+
+  it('tests apiyi provider via zero-inference probe', async () => {
+    const result = await testLlmConnection({
+      provider: 'apiyi',
+      apiKey: 'ap-key',
+    })
+
+    expect(result.provider).toBe('apiyi')
+    expect(result.message).toBe('apiyi 连接成功')
+  })
 })

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { createAudioGenerator, createImageGenerator, createVideoGenerator } from '@/lib/generators/factory'
 import { GoogleVeoVideoGenerator } from '@/lib/generators/video/google'
-import { OpenAICompatibleVideoGenerator } from '@/lib/generators/video/openai-compatible'
 import { BailianAudioGenerator, BailianImageGenerator, BailianVideoGenerator, SiliconFlowAudioGenerator } from '@/lib/generators/official'
+import { ApiyiImageGenerator } from '@/lib/generators/image'
 
 describe('generator factory', () => {
   it('routes gemini-compatible video provider to Google video generator', () => {
@@ -18,5 +18,9 @@ describe('generator factory', () => {
 
   it('routes siliconflow audio provider to official generator', () => {
     expect(createAudioGenerator('siliconflow')).toBeInstanceOf(SiliconFlowAudioGenerator)
+  })
+
+  it('routes apiyi provider to ApiyiImageGenerator', () => {
+    expect(createImageGenerator('apiyi')).toBeInstanceOf(ApiyiImageGenerator)
   })
 })

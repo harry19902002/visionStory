@@ -8,6 +8,7 @@ type SupportedProvider =
   | 'openai'
   | 'bailian'
   | 'siliconflow'
+  | 'apiyi'
   | 'openai-compatible'
   | 'gemini-compatible'
   | 'custom'
@@ -43,6 +44,7 @@ function normalizeProvider(payload: TestConnectionPayload): SupportedProvider {
     case 'gemini-compatible':
     case 'bailian':
     case 'siliconflow':
+    case 'apiyi':
     case 'custom':
       return provider
     default:
@@ -74,6 +76,17 @@ async function testGoogleAI(apiKey: string): Promise<void> {
   if (!response.ok) {
     const error = await response.text()
     throw new Error(`Google AI 认证失败: ${error}`)
+  }
+}
+
+async function testApiyiConnection(apiKey: string): Promise<void> {
+  const response = await fetch('https://api.apiyi.com/v1/models', {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${apiKey}` },
+  })
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`APIYI 认证失败 (${response.status}): ${error}`)
   }
 }
 
@@ -174,6 +187,9 @@ export async function testLlmConnection(payload: TestConnectionPayload): Promise
     case 'google':
       await testGoogleAI(apiKey)
       return { provider, message: 'google 连接成功' }
+    case 'apiyi':
+      await testApiyiConnection(apiKey)
+      return { provider, message: 'apiyi 连接成功' }
     case 'anthropic': {
       const tested = await testOpenAICompatibleConnection({
         apiKey,

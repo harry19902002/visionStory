@@ -122,6 +122,8 @@ export const PRESET_MODELS: PresetModel[] = [
     // 图像模型
     { modelId: 'banana', name: 'Banana Pro', type: 'image', provider: 'fal' },
     { modelId: 'banana-2', name: 'Banana 2', type: 'image', provider: 'fal' },
+    { modelId: 'gemini-3.1-flash-image-preview', name: 'Gemini 3.1 Flash Image', type: 'image', provider: 'apiyi' },
+    { modelId: 'gemini-3-pro-image-preview', name: 'Gemini 3 Pro Image', type: 'image', provider: 'apiyi' },
     { modelId: 'doubao-seedream-4-5-251128', name: 'Seedream 4.5', type: 'image', provider: 'ark' },
     { modelId: 'doubao-seedream-4-0-250828', name: 'Seedream 4.0', type: 'image', provider: 'ark' },
     { modelId: 'doubao-seedream-5-0-260128', name: 'Seedream 5.0 Lite', type: 'image', provider: 'ark' },
@@ -205,6 +207,7 @@ export const PRESET_PROVIDERS: Omit<Provider, 'apiKey' | 'hasApiKey'>[] = [
     { id: 'minimax', name: 'MiniMax Hailuo', baseUrl: 'https://api.minimaxi.com/v1' },
     { id: 'vidu', name: 'Vidu' },
     { id: 'fal', name: 'FAL' },
+    { id: 'apiyi', name: 'APIYI', baseUrl: 'https://api.apiyi.com/v1beta' },
 ]
 
 const ZH_PROVIDER_NAME_MAP: Record<string, string> = {
@@ -213,6 +216,7 @@ const ZH_PROVIDER_NAME_MAP: Record<string, string> = {
     vidu: '生数科技 Vidu',
     bailian: '阿里云百炼',
     siliconflow: '硅基流动',
+    apiyi: 'APIYI',
 }
 
 function isZhLocale(locale?: string): boolean {
@@ -387,6 +391,15 @@ export const PROVIDER_TUTORIALS: ProviderTutorial[] = [
             {
                 text: 'siliconflow_step1',
                 url: 'https://cloud.siliconflow.cn/account/ak'
+            }
+        ]
+    },
+    {
+        providerId: 'apiyi',
+        steps: [
+            {
+                text: 'apiyi_step1',
+                url: 'https://apiyi.com'
             }
         ]
     },

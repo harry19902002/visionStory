@@ -71,6 +71,7 @@ export function LocationCard({ location, assetType = 'location', onImageClick, o
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [uploadTargetIndex, setUploadTargetIndex] = useState<number | undefined>(undefined)
   const latestSelectRequestRef = useRef(0)
 
   // 解析图片
@@ -173,22 +174,31 @@ export function LocationCard({ location, assetType = 'location', onImageClick, o
     undoImage.mutate(location.id)
   }
 
+  // 触发上传（指定目标 slot）
+  const triggerUpload = (index?: number) => {
+      setUploadTargetIndex(index)
+      fileInputRef.current?.click()
+  }
+
   // 上传图片
   const handleUpload = () => {
     const file = fileInputRef.current?.files?.[0]
     if (!file) return
+
+    const targetIndex = uploadTargetIndex ?? currentImageIndex
 
     uploadImage.mutate(
       {
         file,
         locationId: location.id,
         labelText: location.name,
-        imageIndex: currentImageIndex
+        imageIndex: targetIndex
       },
       {
         onError: (error) => alert(error.message || t('uploadFailed')),
         onSettled: () => {
           if (fileInputRef.current) fileInputRef.current.value = ''
+          setUploadTargetIndex(undefined)
         }
       }
     )
@@ -248,6 +258,14 @@ export function LocationCard({ location, assetType = 'location', onImageClick, o
               ariaLabel={tAssets('image.regenCountPrefix')}
               className="inline-flex h-6 items-center justify-center gap-1 rounded-md px-1.5 hover:bg-[var(--glass-tone-info-bg)] transition-colors disabled:opacity-50"
             />
+            <button
+                onClick={() => triggerUpload(effectiveSelectedIndex ?? undefined)}
+                disabled={uploadImage.isPending}
+                className="glass-btn-base glass-btn-soft h-6 w-6 rounded-md"
+                title={tAssets('image.upload')}
+            >
+                <AppIcon name="upload" className="w-4 h-4 text-[var(--glass-tone-success-fg)]" />
+            </button>
             {hasPreviousVersion && (
               <button onClick={handleUndo} className="glass-btn-base glass-btn-soft h-6 w-6 rounded-md" title={tAssets('image.undo')}>
                 <AppIcon name="sparkles" className="w-4 h-4 text-[var(--glass-tone-warning-fg)]" />
@@ -333,6 +351,18 @@ export function LocationCard({ location, assetType = 'location', onImageClick, o
                   onClick={(e) => {
                     e.stopPropagation()
                     if (!img.imageUrl || phase === 'generating' || phase === 'regenerating') return
+                    triggerUpload(img.imageIndex)
+                  }}
+                  disabled={!img.imageUrl || phase === 'generating' || phase === 'regenerating'}
+                  className="absolute top-2 left-2 glass-btn-base h-7 w-7 rounded-full glass-btn-secondary opacity-0 group-hover/thumb:opacity-100 transition-opacity disabled:opacity-0"
+                  title={tAssets('image.uploadReplace')}
+                >
+                  <AppIcon name="upload" className="w-4 h-4 text-[var(--glass-tone-success-fg)]" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (!img.imageUrl || phase === 'generating' || phase === 'regenerating') return
                     handleSelectImage(isThisSelected ? null : img.imageIndex)
                   }}
                   disabled={!img.imageUrl || phase === 'generating' || phase === 'regenerating'}
@@ -396,7 +426,7 @@ export function LocationCard({ location, assetType = 'location', onImageClick, o
             {/* 操作按钮 - 非生成时显示 */}
             {!isTaskRunning && (
               <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => fileInputRef.current?.click()} disabled={uploadImage.isPending} className="glass-btn-base glass-btn-secondary h-7 w-7 rounded-full">
+                <button onClick={() => triggerUpload(currentImageIndex)} disabled={uploadImage.isPending} className="glass-btn-base glass-btn-secondary h-7 w-7 rounded-full">
                   <AppIcon name="upload" className="w-4 h-4 text-[var(--glass-tone-success-fg)]" />
                 </button>
                       <button
@@ -419,6 +449,7 @@ export function LocationCard({ location, assetType = 'location', onImageClick, o
         ) : (
             <div className="flex h-full flex-col items-center justify-center px-4 py-6 text-[var(--glass-text-tertiary)]">
                 <AppIcon name="image" className="w-12 h-12 mb-3" />
+            <div className="flex items-center gap-2">
             <ImageGenerationInlineCountButton
               prefix={<span>{tAssets('image.generateCountPrefix')}</span>}
               suffix={<span>{tAssets('image.generateCountSuffix')}</span>}
@@ -430,6 +461,19 @@ export function LocationCard({ location, assetType = 'location', onImageClick, o
               className="glass-btn-base glass-btn-primary flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg"
               selectClassName="appearance-none bg-transparent border-0 pl-0 pr-3 text-sm font-semibold text-current outline-none cursor-pointer leading-none transition-colors"
             />
+            <button
+                onClick={() => triggerUpload(undefined)}
+                disabled={uploadImage.isPending}
+                className="glass-btn-base glass-btn-secondary flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg"
+            >
+                {uploadImage.isPending ? (
+                    <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                    <AppIcon name="upload" className="w-4 h-4 text-[var(--glass-tone-success-fg)]" />
+                )}
+                <span>{tAssets('image.upload')}</span>
+            </button>
+            </div>
           </div>
         )}
         {isTaskRunning && (

@@ -75,6 +75,7 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
     const [activeAppearance, setActiveAppearance] = useState(0)
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [showDeleteMenu, setShowDeleteMenu] = useState(false)
+    const [uploadTargetIndex, setUploadTargetIndex] = useState<number | undefined>(undefined)
     const latestSelectRequestRef = useRef(0)
 
     // 计算属性
@@ -174,10 +175,18 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
         undoImage.mutate({ characterId: character.id, appearanceIndex: appearance.appearanceIndex })
     }
 
+    // 触发上传（指定目标 slot）
+    const triggerUpload = (index?: number) => {
+        setUploadTargetIndex(index)
+        fileInputRef.current?.click()
+    }
+
     // 上传图片
     const handleUpload = () => {
         const file = fileInputRef.current?.files?.[0]
         if (!file) return
+
+        const targetIndex = uploadTargetIndex ?? effectiveSelectedIndex ?? undefined
 
         uploadImage.mutate(
             {
@@ -185,12 +194,13 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
                 characterId: character.id,
                 appearanceIndex: appearance.appearanceIndex,
                 labelText: `${character.name} - ${appearance.changeReason}`,
-                imageIndex: effectiveSelectedIndex ?? undefined
+                imageIndex: targetIndex
             },
             {
                 onError: (error) => alert(error.message || t('uploadFailed')),
                 onSettled: () => {
                     if (fileInputRef.current) fileInputRef.current.value = ''
+                    setUploadTargetIndex(undefined)
                 }
             }
         )
@@ -273,6 +283,14 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
                             ariaLabel={tAssets('image.regenCountPrefix')}
                             className="inline-flex h-6 items-center justify-center gap-1 rounded-md px-1.5 hover:bg-[var(--glass-tone-info-bg)] transition-colors disabled:opacity-50"
                         />
+                        <button
+                            onClick={() => triggerUpload(effectiveSelectedIndex ?? undefined)}
+                            disabled={uploadImage.isPending}
+                            className="glass-btn-base glass-btn-soft h-6 w-6 rounded-md"
+                            title={tAssets('image.upload')}
+                        >
+                            <AppIcon name="upload" className="w-4 h-4 text-[var(--glass-tone-success-fg)]" />
+                        </button>
                         {hasPreviousVersion && (
                             <button onClick={handleUndo} className="glass-btn-base glass-btn-soft h-6 w-6 rounded-md" title={tAssets('image.undo')}>
                                 <AppIcon name="sparkles" className="w-4 h-4 text-[var(--glass-tone-warning-fg)]" />
@@ -322,6 +340,13 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
                                         {tAssets('image.optionNumber', { number: index + 1 })}
                                     </div>
                                 </div>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); triggerUpload(index) }}
+                                    className="absolute top-2 left-2 glass-btn-base w-7 h-7 rounded-full flex items-center justify-center glass-btn-secondary opacity-0 group-hover/thumb:opacity-100 transition-opacity"
+                                    title={tAssets('image.uploadReplace')}
+                                >
+                                    <AppIcon name="upload" className="w-4 h-4 text-[var(--glass-tone-success-fg)]" />
+                                </button>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleSelectImage(isSelected ? null : index) }}
                                     className={`absolute top-2 right-2 glass-btn-base w-7 h-7 rounded-full flex items-center justify-center ${isSelected ? 'glass-btn-tone-success' : 'glass-btn-secondary'}`}
@@ -404,7 +429,7 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
                         {/* 操作按钮 - 非生成时显示 */}
                         {!isAppearanceTaskRunning && (
                             <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => fileInputRef.current?.click()} disabled={uploadImage.isPending} className="glass-btn-base glass-btn-secondary h-7 w-7 rounded-full">
+                                <button onClick={() => triggerUpload(effectiveSelectedIndex ?? 0)} disabled={uploadImage.isPending} className="glass-btn-base glass-btn-secondary h-7 w-7 rounded-full">
                                     <AppIcon name="upload" className="w-4 h-4 text-[var(--glass-tone-success-fg)]" />
                                 </button>
                                 <button onClick={() => onImageEdit?.('character', character.id, character.name, effectiveSelectedIndex ?? 0, appearance.appearanceIndex)} className="glass-btn-base glass-btn-tone-info h-7 w-7 rounded-full">
@@ -424,17 +449,31 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
                 ) : (
                     <div className="flex h-full flex-col items-center justify-center px-4 py-6 text-[var(--glass-text-tertiary)]">
                         <AppIcon name="image" className="w-12 h-12 mb-3" />
-                        <ImageGenerationInlineCountButton
-                            prefix={<span>{tAssets('image.generateCountPrefix')}</span>}
-                            suffix={<span>{tAssets('image.generateCountSuffix')}</span>}
-                            value={generationCount}
-                            options={getImageGenerationCountOptions('character')}
-                            onValueChange={setGenerationCount}
-                            onClick={() => handleGenerate(generationCount)}
-                            ariaLabel={tAssets('image.selectCount')}
-                            className="glass-btn-base glass-btn-primary flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg"
-                            selectClassName="appearance-none bg-transparent border-0 pl-0 pr-3 text-sm font-semibold text-current outline-none cursor-pointer leading-none transition-colors"
-                        />
+                        <div className="flex items-center gap-2">
+                            <ImageGenerationInlineCountButton
+                                prefix={<span>{tAssets('image.generateCountPrefix')}</span>}
+                                suffix={<span>{tAssets('image.generateCountSuffix')}</span>}
+                                value={generationCount}
+                                options={getImageGenerationCountOptions('character')}
+                                onValueChange={setGenerationCount}
+                                onClick={() => handleGenerate(generationCount)}
+                                ariaLabel={tAssets('image.selectCount')}
+                                className="glass-btn-base glass-btn-primary flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg"
+                                selectClassName="appearance-none bg-transparent border-0 pl-0 pr-3 text-sm font-semibold text-current outline-none cursor-pointer leading-none transition-colors"
+                            />
+                            <button
+                                onClick={() => triggerUpload(undefined)}
+                                disabled={uploadImage.isPending}
+                                className="glass-btn-base glass-btn-secondary flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg"
+                            >
+                                {uploadImage.isPending ? (
+                                    <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <AppIcon name="upload" className="w-4 h-4 text-[var(--glass-tone-success-fg)]" />
+                                )}
+                                <span>{tAssets('image.upload')}</span>
+                            </button>
+                        </div>
                     </div>
                 )}
                 {isAppearanceTaskRunning && (

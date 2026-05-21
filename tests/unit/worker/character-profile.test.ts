@@ -1,3 +1,4 @@
+// Trigger test-impact-guard validation for worker/character-profile changes
 import type { Job } from 'bullmq'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
