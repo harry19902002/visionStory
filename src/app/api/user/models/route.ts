@@ -153,7 +153,10 @@ function parseStoredProviders(rawProviders: string | null | undefined): StoredPr
   return parsedUnknown as StoredProvider[]
 }
 
+const NO_API_KEY_PROVIDERS = new Set(['zealman'])
+
 function hasStoredProviderApiKey(provider: StoredProvider): boolean {
+  if (provider.id && NO_API_KEY_PROVIDERS.has(provider.id)) return true
   return typeof provider.apiKey === 'string' && provider.apiKey.trim().length > 0
 }
 

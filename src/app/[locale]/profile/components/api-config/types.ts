@@ -19,6 +19,7 @@ export interface Provider {
     baseUrl?: string
     apiKey?: string
     hasApiKey?: boolean
+    noApiKey?: boolean
     hidden?: boolean
     apiMode?: 'gemini-sdk' | 'openai-official'
     gatewayRoute?: 'official' | 'openai-compat'
@@ -186,6 +187,8 @@ export const PRESET_MODELS: PresetModel[] = [
     { modelId: 'viduq1', name: 'Vidu Q1', type: 'video', provider: 'vidu' },
     { modelId: 'viduq1-classic', name: 'Vidu Q1 Classic', type: 'video', provider: 'vidu' },
     { modelId: 'vidu2.0', name: 'Vidu 2.0', type: 'video', provider: 'vidu' },
+    // Zealman 视频模型
+    { modelId: 'H17-文图生视频-LTX2.3全面优化版', name: 'LTX 2.3 视频', type: 'video', provider: 'zealman' },
 ]
 
 const PRESET_COMING_SOON_MODEL_KEYS = new Set<string>([])
@@ -208,6 +211,7 @@ export const PRESET_PROVIDERS: Omit<Provider, 'apiKey' | 'hasApiKey'>[] = [
     { id: 'vidu', name: 'Vidu' },
     { id: 'fal', name: 'FAL' },
     { id: 'apiyi', name: 'APIYI', baseUrl: 'https://api.apiyi.com/v1beta' },
+    { id: 'zealman', name: 'Zealman', baseUrl: 'https://uu316886-77936903aee0.westd.seetacloud.com:8443', noApiKey: true },
 ]
 
 const ZH_PROVIDER_NAME_MAP: Record<string, string> = {
@@ -217,6 +221,7 @@ const ZH_PROVIDER_NAME_MAP: Record<string, string> = {
     bailian: '阿里云百炼',
     siliconflow: '硅基流动',
     apiyi: 'APIYI',
+    zealman: 'Zealman 镜像 API',
 }
 
 function isZhLocale(locale?: string): boolean {
@@ -400,6 +405,14 @@ export const PROVIDER_TUTORIALS: ProviderTutorial[] = [
             {
                 text: 'apiyi_step1',
                 url: 'https://apiyi.com'
+            }
+        ]
+    },
+    {
+        providerId: 'zealman',
+        steps: [
+            {
+                text: 'zealman_step1'
             }
         ]
     },

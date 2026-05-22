@@ -178,7 +178,8 @@
       "gemini_compatible_step1": "Enter any Gemini-compatible service Base URL and API key",
       "bailian_step1": "Go to Alibaba Cloud Bailian console and get an API Key",
       "siliconflow_step1": "Go to SiliconFlow console and create an API Key",
-      "apiyi_step1": "Go to APIYI platform and get an API Key"
+      "apiyi_step1": "Go to APIYI platform and get an API Key",
+      "zealman_step1": "Go to Zealman platform and get an API Key"
     }
   },
   "assistantOpen": "AI Assistant",

@@ -24,6 +24,7 @@ export function ProviderBaseFields({ provider, t, state }: ProviderBaseFieldsPro
 
   return (
     <>
+      {!provider.noApiKey && (
       <div className="px-3.5 pt-2.5">
         <div className="glass-surface-soft flex items-center gap-2.5 rounded-xl px-3 py-2">
           <span className="w-[64px] shrink-0 whitespace-nowrap text-[12px] font-semibold text-[var(--glass-text-primary)]">
@@ -102,8 +103,9 @@ export function ProviderBaseFields({ provider, t, state }: ProviderBaseFieldsPro
           )}
         </div>
       </div>
+      )}
 
-      {state.keyTestStatus !== 'idle' && (
+      {!provider.noApiKey && state.keyTestStatus !== 'idle' && (
         <div className="px-3.5 pt-2">
           <div className={`space-y-2 rounded-xl border-2 p-3 ${state.keyTestStatus === 'passed'
             ? 'border-green-500/40 bg-green-500/5'

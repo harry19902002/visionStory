@@ -21,6 +21,7 @@ import { GoogleVeoVideoGenerator } from './video/google'
 import { OpenAICompatibleVideoGenerator } from './video'
 import { MinimaxVideoGenerator } from './minimax'
 import { ViduVideoGenerator } from './vidu'
+import { ZealmanVideoGenerator } from './video/zealman'
 import { getProviderKey } from '@/lib/api-config'
 import {
     BailianAudioGenerator,
@@ -99,6 +100,8 @@ export function createVideoGenerator(provider: string): VideoGenerator {
             return new BailianVideoGenerator()
         case 'siliconflow':
             return new SiliconFlowVideoGenerator()
+        case 'zealman':
+            return new ZealmanVideoGenerator(provider)
         default:
             throw new Error(`Unknown video generator provider: ${provider}`)
     }

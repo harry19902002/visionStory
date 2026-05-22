@@ -48,7 +48,7 @@ function getErrorMessage(error: unknown): string {
  * 解析 externalId 获取 provider、type 和请求信息
  */
 export function parseExternalId(externalId: string): {
-    provider: 'FAL' | 'ARK' | 'GEMINI' | 'GOOGLE' | 'MINIMAX' | 'VIDU' | 'OPENAI' | 'OCOMPAT' | 'BAILIAN' | 'SILICONFLOW' | 'UNKNOWN'
+    provider: 'FAL' | 'ARK' | 'GEMINI' | 'GOOGLE' | 'MINIMAX' | 'VIDU' | 'OPENAI' | 'OCOMPAT' | 'BAILIAN' | 'SILICONFLOW' | 'ZEALMAN' | 'UNKNOWN'
     type: 'VIDEO' | 'IMAGE' | 'BATCH' | 'UNKNOWN'
     endpoint?: string
     requestId: string
@@ -210,9 +210,23 @@ export function parseExternalId(externalId: string): {
         }
     }
 
+    if (externalId.startsWith('ZEALMAN:')) {
+        const parts = externalId.split(':')
+        const type = parts[1]
+        const requestId = parts.slice(2).join(':')
+        if (type !== 'VIDEO' || !requestId) {
+            throw new Error(`无效 ZEALMAN externalId: "${externalId}"，应为 ZEALMAN:VIDEO:promptId`)
+        }
+        return {
+            provider: 'ZEALMAN',
+            type: 'VIDEO',
+            requestId,
+        }
+    }
+
     throw new Error(
         `无法识别的 externalId 格式: "${externalId}". ` +
-        `支持的格式: FAL:TYPE:endpoint:requestId, ARK:TYPE:requestId, GEMINI:BATCH:batchName, GOOGLE:VIDEO:operationName, MINIMAX:TYPE:taskId, VIDU:TYPE:taskId, OPENAI:VIDEO:providerToken:videoId, OCOMPAT:TYPE:providerToken:modelKeyToken:taskId, BAILIAN:TYPE:requestId, SILICONFLOW:TYPE:requestId`
+        `支持的格式: FAL:TYPE:endpoint:requestId, ARK:TYPE:requestId, GEMINI:BATCH:batchName, GOOGLE:VIDEO:operationName, MINIMAX:TYPE:taskId, VIDU:TYPE:taskId, OPENAI:VIDEO:providerToken:videoId, OCOMPAT:TYPE:providerToken:modelKeyToken:taskId, BAILIAN:TYPE:requestId, SILICONFLOW:TYPE:requestId, ZEALMAN:VIDEO:promptId`
     )
 }
 
@@ -252,6 +266,8 @@ export async function pollAsyncTask(
             return await pollBailianTask(parsed.requestId, userId)
         case 'SILICONFLOW':
             return await pollSiliconFlowTask(parsed.requestId)
+        case 'ZEALMAN':
+            return await pollZealmanTask(parsed.requestId, userId)
         default:
             // 🔥 移除 fallback：未知 provider 直接抛出错误
             throw new Error(`未知的 Provider: ${parsed.provider}`)
@@ -571,6 +587,80 @@ async function pollMinimaxTask(
         imageUrl: result.imageUrl,
         resultUrl: result.videoUrl || result.imageUrl,
         error: result.error
+    }
+}
+
+/**
+ * Zealman 任务轮询
+ */
+async function pollZealmanTask(
+    promptId: string,
+    userId: string
+): Promise<PollResult> {
+    const logPrefix = '[Zealman Query]'
+    try {
+        const { baseUrl, apiKey } = await getProviderConfig(userId, 'zealman')
+        if (!baseUrl) {
+            throw new Error('ZEALMAN_BASE_URL_MISSING')
+        }
+
+        const url = baseUrl.replace(/\/+$/, '')
+        const headers: Record<string, string> = {}
+        if (apiKey) {
+            headers['Authorization'] = `Bearer ${apiKey}`
+        }
+
+        const response = await fetch(`${url}/api/workflow/result?prompt_id=${encodeURIComponent(promptId)}`, {
+            method: 'GET',
+            headers,
+        })
+
+        if (!response.ok) {
+            const errorText = await response.text()
+            _ulogError(`${logPrefix} 查询失败:`, response.status, errorText)
+            return {
+                status: 'failed',
+                error: `查询失败: ${response.status}`
+            }
+        }
+
+        const data = await response.json()
+
+        if (data.pending === true) {
+            return { status: 'pending' }
+        }
+
+        if (data.success === false || data.error) {
+            return {
+                status: 'failed',
+                error: data.error || '任务执行失败'
+            }
+        }
+
+        if (data.results && data.results.length > 0) {
+            // 取第一个结果
+            const firstResult = data.results[0]
+            if (firstResult && firstResult.url) {
+                const absoluteUrl = `${url}${firstResult.url}`
+                return {
+                    status: 'completed',
+                    videoUrl: absoluteUrl,
+                    resultUrl: absoluteUrl,
+                }
+            }
+        }
+
+        return {
+            status: 'failed',
+            error: '任务完成但未返回有效结果'
+        }
+    } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error)
+        _ulogError(`${logPrefix} prompt_id=${promptId} 异常:`, error)
+        return {
+            status: 'failed',
+            error: errorMessage
+        }
     }
 }
 

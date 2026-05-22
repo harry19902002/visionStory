@@ -48,6 +48,7 @@ function isAudioDefaultCandidate(model: CustomModel): boolean {
 
 function hasProviderApiKey(provider: Provider | undefined): boolean {
   if (!provider) return false
+  if (provider.noApiKey === true) return true
   if (provider.hasApiKey === true) return true
   const apiKey = typeof provider.apiKey === 'string' ? provider.apiKey.trim() : ''
   return apiKey.length > 0

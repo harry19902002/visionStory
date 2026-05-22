@@ -274,7 +274,7 @@ export function ProviderAdvancedFields({
                 onToggleModel={onToggleModel}
                 onDeleteModel={onDeleteModel}
                 onUpdateModel={onUpdateModel}
-                hasApiKey={!!provider.hasApiKey}
+                hasApiKey={!!provider.hasApiKey || !!provider.noApiKey}
               />
             ))}
           </div>

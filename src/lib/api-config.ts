@@ -66,7 +66,12 @@ function normalizeProviderBaseUrl(providerId: string, rawBaseUrl?: string): stri
   }
 
   const baseUrl = readTrimmedString(rawBaseUrl)
-  if (!baseUrl) return undefined
+  if (!baseUrl) {
+    if (providerKey === 'zealman') return 'https://uu316886-77936903aee0.westd.seetacloud.com:8443'
+    if (providerKey === 'apiyi') return 'https://api.apiyi.com/v1beta'
+    if (providerKey === 'openrouter') return 'https://openrouter.ai/api/v1'
+    return undefined
+  }
   if (providerKey !== 'openai-compatible') return baseUrl
 
   try {
@@ -415,18 +420,22 @@ export interface ProviderConfig {
   gatewayRoute?: GatewayRouteType
 }
 
+const NO_API_KEY_PROVIDERS = new Set(['zealman'])
+
 export async function getProviderConfig(userId: string, providerId: string): Promise<ProviderConfig> {
   const { providers } = await readUserConfig(userId)
   const provider = pickProviderStrict(providers, providerId)
 
-  if (!provider.apiKey) {
+  const isNoApiKeyProvider = provider.id && NO_API_KEY_PROVIDERS.has(getProviderKey(provider.id))
+
+  if (!provider.apiKey && !isNoApiKeyProvider) {
     throw new Error(`PROVIDER_API_KEY_MISSING: ${provider.id}`)
   }
 
   return {
     id: provider.id,
     name: provider.name,
-    apiKey: decryptApiKey(provider.apiKey),
+    apiKey: provider.apiKey ? decryptApiKey(provider.apiKey) : '',
     baseUrl: normalizeProviderBaseUrl(provider.id, provider.baseUrl),
     apiMode: provider.apiMode,
     gatewayRoute: provider.gatewayRoute,
