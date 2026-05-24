@@ -8,6 +8,7 @@ import VoiceCreationModal from '@/app/[locale]/workspace/asset-hub/components/Vo
 import { AppIcon } from '@/components/ui/icons'
 import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import type { InlineSpeakerVoiceBinding } from '@/lib/novel-promotion/stages/voice-stage-runtime/types'
+import { useProjectData } from '@/lib/query/hooks/useProjectData'
 
 type BindingTab = 'select' | 'upload' | 'design'
 
@@ -28,6 +29,8 @@ interface SpeakerVoiceBindingDialogProps {
 export default function SpeakerVoiceBindingDialog({
     isOpen,
     speaker,
+    projectId,
+    episodeId,
     onClose,
     onBound,
 }: SpeakerVoiceBindingDialogProps) {
@@ -36,9 +39,24 @@ export default function SpeakerVoiceBindingDialog({
     // 子弹窗打开标记
     const [subDialogOpen, setSubDialogOpen] = useState(false)
 
+    const { data: project } = useProjectData(projectId)
+    const audioModel = project?.novelPromotionData?.audioModel || ''
+    const isMinimax = audioModel.toLowerCase().includes('minimax')
+
+    const [advancedVoice, setAdvancedVoice] = useState<{
+        id: string
+        customVoiceUrl: string | null
+        voiceId: string | null
+        voiceType: string
+    } | null>(null)
+    const [speed, setSpeed] = useState<number>(1.0)
+    const [pitch, setPitch] = useState<number>(0)
+    const [vol, setVol] = useState<number>(1.0)
+
     const handleClose = useCallback(() => {
         setActiveTab('select')
         setSubDialogOpen(false)
+        setAdvancedVoice(null)
         onClose()
     }, [onClose])
 
@@ -53,6 +71,12 @@ export default function SpeakerVoiceBindingDialog({
         voiceId: string | null
         voiceType: string
     }) => {
+        if (isMinimax && voice.voiceId) {
+            setAdvancedVoice(voice)
+            setSubDialogOpen(false)
+            return
+        }
+
         if (voice.voiceId) {
             onBound(speaker, {
                 provider: 'bailian',
@@ -70,7 +94,7 @@ export default function SpeakerVoiceBindingDialog({
         }
         setSubDialogOpen(false)
         onClose()
-    }, [speaker, onBound, onClose, t])
+    }, [speaker, onBound, onClose, t, isMinimax])
 
     // AI 设计音色或上传音频后的回调
     const handleCreationSuccess = useCallback(() => {
@@ -89,6 +113,77 @@ export default function SpeakerVoiceBindingDialog({
 
     if (!isOpen) return null
     if (typeof document === 'undefined') return null
+
+    if (advancedVoice) {
+        return createPortal(
+            <>
+                <div className="fixed inset-0 z-[9999] glass-overlay" onClick={() => setAdvancedVoice(null)} />
+                <div className="fixed z-[10000] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 glass-surface-modal w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)]">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <AppIcon name="mic" className="w-5 h-5 text-[var(--glass-tone-info-fg)] shrink-0" />
+                            <h2 className="font-semibold text-[var(--glass-text-primary)] truncate">MiniMax 配音高级设置</h2>
+                        </div>
+                        <button onClick={() => setAdvancedVoice(null)} className="glass-btn-base glass-btn-soft p-1 text-[var(--glass-text-tertiary)] shrink-0">
+                            <AppIcon name="close" className="w-5 h-5" />
+                        </button>
+                    </div>
+                    <div className="p-5 space-y-5">
+                        <div>
+                            <label className="block text-xs font-medium text-[var(--glass-text-secondary)] mb-2 flex justify-between">
+                                <span>语速 (Speed)</span>
+                                <span className="text-[var(--glass-text-primary)] font-bold">{speed.toFixed(1)}x</span>
+                            </label>
+                            <input type="range" min="0.5" max="2.0" step="0.1" value={speed} onChange={e => setSpeed(parseFloat(e.target.value))} className="w-full accent-[var(--glass-accent-from)]" />
+                            <div className="flex justify-between text-[10px] text-[var(--glass-text-tertiary)] mt-1">
+                                <span>0.5x (慢)</span>
+                                <span>2.0x (快)</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-[var(--glass-text-secondary)] mb-2 flex justify-between">
+                                <span>音量 (Volume)</span>
+                                <span className="text-[var(--glass-text-primary)] font-bold">{vol.toFixed(1)}</span>
+                            </label>
+                            <input type="range" min="0.1" max="10.0" step="0.1" value={vol} onChange={e => setVol(parseFloat(e.target.value))} className="w-full accent-[var(--glass-accent-from)]" />
+                            <div className="flex justify-between text-[10px] text-[var(--glass-text-tertiary)] mt-1">
+                                <span>0.1 (低)</span>
+                                <span>10.0 (高)</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-[var(--glass-text-secondary)] mb-2 flex justify-between">
+                                <span>声调 (Pitch)</span>
+                                <span className="text-[var(--glass-text-primary)] font-bold">{pitch > 0 ? `+${pitch}` : pitch}</span>
+                            </label>
+                            <input type="range" min="-12" max="12" step="1" value={pitch} onChange={e => setPitch(parseInt(e.target.value))} className="w-full accent-[var(--glass-accent-from)]" />
+                            <div className="flex justify-between text-[10px] text-[var(--glass-text-tertiary)] mt-1">
+                                <span>-12 (低沉)</span>
+                                <span>+12 (尖锐)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex gap-2 p-4 border-t border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)]">
+                        <button onClick={() => setAdvancedVoice(null)} className="glass-btn-base glass-btn-secondary flex-1 py-2 rounded-lg text-sm">{t('cancel', { defaultValue: '取消' })}</button>
+                        <button onClick={() => {
+                            onBound(speaker, {
+                                provider: 'minimax',
+                                voiceType: advancedVoice.voiceType,
+                                voiceId: advancedVoice.voiceId!,
+                                speed,
+                                pitch,
+                                vol,
+                                ...(advancedVoice.customVoiceUrl ? { previewAudioUrl: advancedVoice.customVoiceUrl } : {})
+                            })
+                            setAdvancedVoice(null)
+                            onClose()
+                        }} className="glass-btn-base glass-btn-primary flex-1 py-2 rounded-lg text-sm font-medium">{t('confirm', { defaultValue: '确认' })}</button>
+                    </div>
+                </div>
+            </>,
+            document.body
+        )
+    }
 
     // 音色库选择 — 直接渲染 VoicePickerDialog
     if (activeTab === 'select' && subDialogOpen) {

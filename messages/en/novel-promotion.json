@@ -2,6 +2,7 @@
   "stages": {
     "story": "Story",
     "script": "Script",
+    "voice": "Voice",
     "storyboard": "Storyboard",
     "video": "Video",
     "editor": "AI Editor",

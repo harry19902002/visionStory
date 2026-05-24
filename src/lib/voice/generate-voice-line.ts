@@ -6,6 +6,7 @@ import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 import { extractStorageKey, getSignedUrl, toFetchableUrl, uploadObject } from '@/lib/storage'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 import { synthesizeWithBailianTTS } from '@/lib/providers/bailian'
+import { synthesizeWithMinimaxTTS } from '@/lib/voice/minimax-tts'
 import {
   parseSpeakerVoiceMap,
   resolveVoiceBindingForProvider,
@@ -261,6 +262,21 @@ export async function generateVoiceLine(params: {
       audioData,
       audioDuration: result.audioDuration ?? getWavDurationFromBuffer(audioData),
     }
+  } else if (providerKey === 'minimax') {
+    if (!voiceBinding || voiceBinding.provider !== 'minimax') {
+      throw new Error('请先为该发言人绑定 MiniMax 音色')
+    }
+    const { apiKey } = await getProviderConfig(params.userId, audioSelection.provider)
+    generated = await synthesizeWithMinimaxTTS({
+      text,
+      model: audioSelection.modelId,
+      voiceId: voiceBinding.voiceId,
+      speed: voiceBinding.speed ?? 1.0,
+      vol: voiceBinding.vol ?? 1.0,
+      pitch: voiceBinding.pitch ?? 0,
+      emotion: line.emotionPrompt,
+      apiKey,
+    })
   } else {
     throw new Error(`AUDIO_PROVIDER_UNSUPPORTED: ${audioSelection.provider}`)
   }

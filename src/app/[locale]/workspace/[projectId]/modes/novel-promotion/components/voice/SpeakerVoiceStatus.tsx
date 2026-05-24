@@ -40,6 +40,46 @@ export default function SpeakerVoiceStatus({
         }
     }
 
+    const isNarrator = (s: string) => /旁白|narrator/i.test(s)
+    const narratorSpeakers = speakers.filter(isNarrator)
+    const characterSpeakers = speakers.filter(s => !isNarrator(s))
+
+    // 内部渲染扬声器卡片
+    const renderSpeakerCard = (speaker: string) => {
+        const hasVoice = !!getSpeakerVoiceUrl(speaker)
+        const count = speakerStats[speaker]
+        const hasCharacter = hasSpeakerCharacter ? hasSpeakerCharacter(speaker) : true
+        return (
+            <div
+                key={speaker}
+                className="w-full sm:w-[280px] max-w-full flex items-center gap-1.5 rounded-xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)] px-3 py-2"
+            >
+                <div className="min-w-0">
+                    <div className="text-sm font-semibold text-[var(--glass-text-primary)] truncate" title={speaker}>{speaker}</div>
+                    <div className="text-xs text-[var(--glass-text-tertiary)]">{t("speakerVoice.linesCount", { count })}</div>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full ${hasVoice
+                    ? 'bg-[var(--glass-tone-success-bg)] text-[var(--glass-tone-success-fg)]'
+                    : 'bg-[var(--glass-tone-warning-bg)] text-[var(--glass-tone-warning-fg)]'
+                    }`}>
+                    {hasVoice ? t("speakerVoice.configuredStatus") : t("speakerVoice.pendingStatus")}
+                </span>
+                {/* 无匹配角色时显示内联标记 */}
+                {!hasCharacter && !hasVoice && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]">
+                        {t("speakerVoice.inlineLabel")}
+                    </span>
+                )}
+                <button
+                    onClick={() => handleVoiceSettings(speaker)}
+                    className="glass-btn-base glass-btn-secondary text-xs px-2.5 py-1.5 font-medium whitespace-nowrap shrink-0"
+                >
+                    {t("speakerVoice.voiceSettings")}
+                </button>
+            </div>
+        )
+    }
+
     // 嵌入模式：紧凑布局
     if (embedded) {
         return (
@@ -48,42 +88,22 @@ export default function SpeakerVoiceStatus({
                     <h4 className="text-sm font-semibold text-[var(--glass-text-primary)]">{t("embedded.speakerVoiceStatus")}</h4>
                     <span className="text-xs text-[var(--glass-text-tertiary)]">{t("embedded.speakersCount", { count: speakers.length })}</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                    {speakers.map(speaker => {
-                        const hasVoice = !!getSpeakerVoiceUrl(speaker)
-                        const count = speakerStats[speaker]
-                        const hasCharacter = hasSpeakerCharacter ? hasSpeakerCharacter(speaker) : true
-                        return (
-                            <div
-                                key={speaker}
-                                className="w-full sm:w-[280px] max-w-full flex items-center gap-1.5 rounded-xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)] px-3 py-2"
-                            >
-                                <div className="min-w-0">
-                                    <div className="text-sm font-semibold text-[var(--glass-text-primary)] truncate">{speaker}</div>
-                                    <div className="text-xs text-[var(--glass-text-tertiary)]">{t("speakerVoice.linesCount", { count })}</div>
-                                </div>
-                                <span className={`text-xs px-2 py-1 rounded-full ${hasVoice
-                                    ? 'bg-[var(--glass-tone-success-bg)] text-[var(--glass-tone-success-fg)]'
-                                    : 'bg-[var(--glass-tone-warning-bg)] text-[var(--glass-tone-warning-fg)]'
-                                    }`}>
-                                    {hasVoice ? t("speakerVoice.configuredStatus") : t("speakerVoice.pendingStatus")}
-                                </span>
-                                {/* 无匹配角色时显示内联标记 */}
-                                {!hasCharacter && !hasVoice && (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]">
-                                        {t("speakerVoice.inlineLabel")}
-                                    </span>
-                                )}
-                                <button
-                                    onClick={() => handleVoiceSettings(speaker)}
-                                    className="glass-btn-base glass-btn-secondary text-xs px-2.5 py-1.5 font-medium whitespace-nowrap shrink-0"
-                                >
-                                    {t("speakerVoice.voiceSettings")}
-                                </button>
-                            </div>
-                        )
-                    })}
-                </div>
+                {narratorSpeakers.length > 0 && (
+                    <div className="mb-3">
+                        <div className="text-xs text-[var(--glass-text-tertiary)] mb-2 font-medium">旁白配音</div>
+                        <div className="flex flex-wrap gap-2">
+                            {narratorSpeakers.map(renderSpeakerCard)}
+                        </div>
+                    </div>
+                )}
+                {characterSpeakers.length > 0 && (
+                    <div>
+                        <div className="text-xs text-[var(--glass-text-tertiary)] mb-2 font-medium">主角/群演配音</div>
+                        <div className="flex flex-wrap gap-2">
+                            {characterSpeakers.map(renderSpeakerCard)}
+                        </div>
+                    </div>
+                )}
             </div>
         )
     }
@@ -98,37 +118,22 @@ export default function SpeakerVoiceStatus({
                     （{t("speakerVoice.hint")}）
                 </span>
             </h3>
-            <div className="flex flex-wrap gap-2">
-                {speakers.map(speaker => {
-                    const voiceUrl = getSpeakerVoiceUrl(speaker)
-                    const hasVoice = !!voiceUrl
-                    const hasCharacter = hasSpeakerCharacter ? hasSpeakerCharacter(speaker) : true
-
-                    return (
-                        <div key={speaker} className="w-full sm:w-[280px] max-w-full flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)]">
-                            <div className="min-w-0">
-                                <div className="font-semibold text-[var(--glass-text-primary)] truncate" title={speaker}>{speaker}</div>
-                                <div className="text-xs text-[var(--glass-text-tertiary)]">{t("speakerVoice.linesCount", { count: speakerStats[speaker] })}</div>
-                            </div>
-                            <span className={`text-xs px-2 py-1 rounded-full ${hasVoice ? 'bg-[var(--glass-tone-success-bg)] text-[var(--glass-tone-success-fg)]' : 'bg-[var(--glass-tone-warning-bg)] text-[var(--glass-tone-warning-fg)]'}`}>
-                                {hasVoice ? t("speakerVoice.configuredStatus") : t("speakerVoice.pendingStatus")}
-                            </span>
-                            {/* 无匹配角色时显示内联标记 */}
-                            {!hasCharacter && !hasVoice && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]">
-                                    {t("speakerVoice.inlineLabel")}
-                                </span>
-                            )}
-                            <button
-                                onClick={() => handleVoiceSettings(speaker)}
-                                className="glass-btn-base glass-btn-secondary text-xs px-2.5 py-1.5"
-                            >
-                                {t("speakerVoice.voiceSettings")}
-                            </button>
-                        </div>
-                    )
-                })}
-            </div>
+            {narratorSpeakers.length > 0 && (
+                <div className="mb-4">
+                    <div className="text-sm text-[var(--glass-text-tertiary)] mb-2 font-medium">旁白配音</div>
+                    <div className="flex flex-wrap gap-2">
+                        {narratorSpeakers.map(renderSpeakerCard)}
+                    </div>
+                </div>
+            )}
+            {characterSpeakers.length > 0 && (
+                <div>
+                    <div className="text-sm text-[var(--glass-text-tertiary)] mb-2 font-medium">主角/群演配音</div>
+                    <div className="flex flex-wrap gap-2">
+                        {characterSpeakers.map(renderSpeakerCard)}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

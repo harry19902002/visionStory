@@ -1,6 +1,6 @@
 type VoiceSource = 'character' | 'speaker'
 
-export type SupportedAudioProviderKey = 'fal' | 'bailian'
+export type SupportedAudioProviderKey = 'fal' | 'bailian' | 'minimax'
 
 export interface CharacterVoiceFields {
   customVoiceUrl?: string | null
@@ -13,6 +13,9 @@ export interface RawSpeakerVoiceEntry {
   audioUrl?: string | null
   voiceId?: string | null
   previewAudioUrl?: string | null
+  speed?: number | null
+  pitch?: number | null
+  vol?: number | null
 }
 
 export type FalSpeakerVoiceEntry = {
@@ -28,7 +31,17 @@ export type BailianSpeakerVoiceEntry = {
   previewAudioUrl?: string
 }
 
-export type SpeakerVoiceEntry = FalSpeakerVoiceEntry | BailianSpeakerVoiceEntry
+export type MinimaxSpeakerVoiceEntry = {
+  provider: 'minimax'
+  voiceType: string
+  voiceId: string
+  speed?: number
+  pitch?: number
+  vol?: number
+  previewAudioUrl?: string
+}
+
+export type SpeakerVoiceEntry = FalSpeakerVoiceEntry | BailianSpeakerVoiceEntry | MinimaxSpeakerVoiceEntry
 export type SpeakerVoiceMap = Record<string, SpeakerVoiceEntry>
 
 export type FalVoiceGenerationBinding = {
@@ -43,7 +56,16 @@ export type BailianVoiceGenerationBinding = {
   voiceId: string
 }
 
-export type VoiceGenerationBinding = FalVoiceGenerationBinding | BailianVoiceGenerationBinding
+export type MinimaxVoiceGenerationBinding = {
+  provider: 'minimax'
+  source: VoiceSource
+  voiceId: string
+  speed?: number
+  pitch?: number
+  vol?: number
+}
+
+export type VoiceGenerationBinding = FalVoiceGenerationBinding | BailianVoiceGenerationBinding | MinimaxVoiceGenerationBinding
 
 export type SpeakerVoicePatch =
   | {
@@ -55,6 +77,15 @@ export type SpeakerVoicePatch =
     provider: 'bailian'
     voiceType?: string
     voiceId: string
+    previewAudioUrl?: string
+  }
+  | {
+    provider: 'minimax'
+    voiceType?: string
+    voiceId: string
+    speed?: number
+    pitch?: number
+    vol?: number
     previewAudioUrl?: string
   }
 
@@ -96,6 +127,22 @@ function normalizeRawSpeakerVoiceEntry(raw: unknown, speaker: string): SpeakerVo
       provider: 'bailian',
       voiceType,
       voiceId,
+      ...(preview ? { previewAudioUrl: preview } : {}),
+    }
+  }
+
+  if (provider === 'minimax') {
+    if (!voiceId) {
+      throw new Error(`SPEAKER_VOICE_ENTRY_INVALID_MINIMAX_VOICE_ID: ${speaker}`)
+    }
+    const preview = previewAudioUrl || audioUrl
+    return {
+      provider: 'minimax',
+      voiceType,
+      voiceId,
+      ...(typeof entry.speed === 'number' ? { speed: entry.speed } : {}),
+      ...(typeof entry.pitch === 'number' ? { pitch: entry.pitch } : {}),
+      ...(typeof entry.vol === 'number' ? { vol: entry.vol } : {}),
       ...(preview ? { previewAudioUrl: preview } : {}),
     }
   }
@@ -151,7 +198,7 @@ export function parseSpeakerVoiceMap(raw: string | null | undefined): SpeakerVoi
 }
 
 function normalizeProviderKey(providerKey: string): SupportedAudioProviderKey | null {
-  if (providerKey === 'fal' || providerKey === 'bailian') {
+  if (providerKey === 'fal' || providerKey === 'bailian' || providerKey === 'minimax') {
     return providerKey
   }
   return null
@@ -175,6 +222,18 @@ function toBailianBinding(source: VoiceSource, voiceId: string | null): BailianV
   }
 }
 
+function toMinimaxBinding(source: VoiceSource, voiceId: string | null, speakerVoice?: SpeakerVoiceEntry | null): MinimaxVoiceGenerationBinding | null {
+  if (!voiceId) return null
+  return {
+    provider: 'minimax',
+    source,
+    voiceId,
+    ...(speakerVoice?.provider === 'minimax' && typeof speakerVoice.speed === 'number' ? { speed: speakerVoice.speed } : {}),
+    ...(speakerVoice?.provider === 'minimax' && typeof speakerVoice.pitch === 'number' ? { pitch: speakerVoice.pitch } : {}),
+    ...(speakerVoice?.provider === 'minimax' && typeof speakerVoice.vol === 'number' ? { vol: speakerVoice.vol } : {}),
+  }
+}
+
 export function resolveVoiceBindingForProvider(params: {
   providerKey: string
   character?: CharacterVoiceFields | null
@@ -191,6 +250,13 @@ export function resolveVoiceBindingForProvider(params: {
     if (fromCharacter) return fromCharacter
     if (params.speakerVoice?.provider !== 'fal') return null
     return toFalBinding('speaker', readTrimmedString(params.speakerVoice.audioUrl))
+  }
+
+  if (providerKey === 'minimax') {
+    const fromCharacter = toMinimaxBinding('character', characterVoiceId, params.speakerVoice)
+    if (fromCharacter) return fromCharacter
+    if (params.speakerVoice?.provider !== 'minimax') return null
+    return toMinimaxBinding('speaker', readTrimmedString(params.speakerVoice.voiceId), params.speakerVoice)
   }
 
   const fromCharacter = toBailianBinding('character', characterVoiceId)

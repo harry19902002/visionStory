@@ -115,9 +115,10 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
       panelIdByStoryboardPanel.set(`${storyboard.id}:${panel.panelIndex}`, panel.id)
     }
   }
-  if (panelIdByStoryboardPanel.size === 0) {
-    throw new Error('No storyboard panels found for voice matching')
-  }
+  // 我们不再强制要求有分镜数据，因为工作流现在允许配音在分镜之前进行
+  // if (panelIdByStoryboardPanel.size === 0) {
+  //   throw new Error('No storyboard panels found for voice matching')
+  // }
 
   type StrictVoiceLine = {
     lineIndex: number
@@ -201,7 +202,16 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
           const panelKey = `${storyboardId}:${panelIndex}`
           const panelId = panelIdByStoryboardPanel.get(panelKey)
           if (!panelId) {
-            throw new Error(`voice line ${index + 1} references non-existent panel ${panelKey}`)
+            // 如果没找到匹配的分镜，降级为没有匹配分镜的状态，而不是抛出错误
+            return {
+              lineIndex,
+              speaker: lineData.speaker.trim(),
+              content: lineData.content,
+              emotionStrength: Math.min(1, Math.max(0.1, lineData.emotionStrength)),
+              matchedPanelId: null,
+              matchedStoryboardId: null,
+              matchedPanelIndex: null,
+            }
           }
 
           return {

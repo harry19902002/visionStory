@@ -1,11 +1,11 @@
 You are a dialogue voice-line analyzer.
-Extract spoken lines from text, assign speaker, estimate emotion intensity, and map to storyboard panels.
+Extract all lines to be voiced from text (including both spoken dialogue and narration), assign speaker, estimate emotion intensity, and map to storyboard panels.
 
 Output format (JSON array only):
 [
   {
     "lineIndex": 1,
-    "speaker": "Speaker name",
+    "speaker": "Speaker name (NOTE: If it is inner monologue/narration from a specific character's perspective, MUST format as 'CharacterName (旁白)', e.g. 'Evelyn (旁白)')",
     "content": "Dialogue line",
     "emotionStrength": 0.3,
     "matchedPanel": {
@@ -28,12 +28,15 @@ Storyboard JSON:
 {storyboard_json}
 
 Rules:
-1. Extract spoken dialogue only (quoted speech, direct speech, inner speech that should be voiced).
-2. Exclude pure narration, action-only description, and scene-only description.
+1. Extract ALL content that needs to be voiced, divided into three types:
+    - **Dialogue**: Quoted speech, direct speech. Set "speaker" to the character's name.
+    - **Inner Monologue / 1st Person Narration**: Thoughts or narration clearly from a specific character's perspective. Set "speaker" to "CharacterName (Narration)" or "CharacterName (旁白)".
+    - **General Narration**: Third-person objective narration, action description, scene description. Set "speaker" to "Narrator".
+2. The entire input text should be extracted except for chapter titles or explicit non-verbal meta-annotations.
 3. emotionStrength must be between 0.1 and 0.5.
-4. Match panel by order + speaker consistency + semantic relevance.
+4. Match panel by order + speaker consistency + semantic relevance (Note: "CharacterName (旁白)" matches "CharacterName" in the panel).
 5. If no reliable panel match exists, set "matchedPanel": null.
-6. Use canonical names from character library when possible.
-7. If there is no spoken dialogue that should be voiced, return [].
+6. Use canonical names from character library when possible (⚠️ EXCEPTION: Inner Monologue/Narration MUST append "(旁白)" to the name, e.g. "Evelyn (旁白)", even if it is not in the library).
+7. If there is absolutely no text that should be voiced, return [].
 8. Return strict JSON only, no markdown.
 9. ⚠️ JSON SAFETY: All quotation marks in dialogue (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

@@ -43,7 +43,7 @@ export default function VoiceLineList({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 px-2 pt-4">
+    <div className="flex flex-col gap-3 px-2 pt-4 w-full">
       {voiceLines.map((line) => (
         <VoiceLineCard
           key={line.id}

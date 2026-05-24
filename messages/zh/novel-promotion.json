@@ -2,6 +2,7 @@
   "stages": {
     "story": "故事",
     "script": "剧本",
+    "voice": "配音",
     "storyboard": "分镜",
     "video": "成片",
     "editor": "AI剪辑",
