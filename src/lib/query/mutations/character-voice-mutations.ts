@@ -37,7 +37,7 @@ export function useUpdateProjectCharacterVoiceSettings(projectId: string) {
             customVoiceUrl,
         }: {
             characterId: string
-            voiceType: 'qwen-designed' | 'uploaded' | 'custom' | null
+            voiceType: 'preset' | 'qwen-designed' | 'uploaded' | 'custom' | null
             voiceId?: string
             customVoiceUrl?: string
         }) => {

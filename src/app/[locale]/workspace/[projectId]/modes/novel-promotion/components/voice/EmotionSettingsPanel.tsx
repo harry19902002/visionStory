@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { useProjectData } from '@/lib/query/hooks/useProjectData'
+import { useUserPreferences } from '@/lib/query/hooks/useUserPreferences'
 
 const MINIMAX_EMOTIONS = [
     { value: '', label: '无 (None)' },
@@ -49,7 +50,8 @@ export default function EmotionSettingsPanel({
     const params = useParams()
     const projectId = typeof params?.projectId === 'string' ? params.projectId : ''
     const { data: project } = useProjectData(projectId)
-    const audioModel = project?.novelPromotionData?.audioModel || ''
+    const { data: userPref } = useUserPreferences()
+    const audioModel = project?.novelPromotionData?.audioModel || userPref?.audioModel || ''
     const isMinimax = audioModel.toLowerCase().includes('minimax')
 
     const [prompt, setPrompt] = useState(emotionPrompt || '')

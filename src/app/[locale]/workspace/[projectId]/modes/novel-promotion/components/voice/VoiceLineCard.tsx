@@ -6,6 +6,26 @@ import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState, type TaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
 
+const SPEAKER_COLORS = [
+    { bg: 'bg-[var(--glass-tone-info-bg)]/80', text: 'text-[var(--glass-tone-info-fg)]' },
+    { bg: 'bg-purple-500/15', text: 'text-purple-600 dark:text-purple-400' },
+    { bg: 'bg-teal-500/15', text: 'text-teal-600 dark:text-teal-400' },
+    { bg: 'bg-orange-500/15', text: 'text-orange-600 dark:text-orange-400' },
+    { bg: 'bg-pink-500/15', text: 'text-pink-600 dark:text-pink-400' },
+    { bg: 'bg-indigo-500/15', text: 'text-indigo-600 dark:text-indigo-400' },
+    { bg: 'bg-cyan-500/15', text: 'text-cyan-600 dark:text-cyan-400' },
+    { bg: 'bg-rose-500/15', text: 'text-rose-600 dark:text-rose-400' },
+]
+
+function getSpeakerColorClass(speaker: string) {
+    if (!speaker) return SPEAKER_COLORS[0];
+    let hash = 0;
+    for (let i = 0; i < speaker.length; i++) {
+        hash = speaker.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return SPEAKER_COLORS[Math.abs(hash) % SPEAKER_COLORS.length] || SPEAKER_COLORS[0];
+}
+
 interface VoiceLine {
     id: string
     lineIndex: number
@@ -65,6 +85,8 @@ export default function VoiceLineCard({
         })
         : statusState ?? null
 
+    const speakerColor = getSpeakerColorClass(line.speaker)
+
     return (
         <div
             className={`relative glass-surface-elevated overflow-hidden transition-all hover:shadow-[var(--glass-shadow-md)] flex flex-col ${line.audioUrl ? 'ring-1 ring-[var(--glass-focus-ring)]/60' : hasVoice ? '' : 'ring-1 ring-[var(--glass-stroke-warning)]/60'
@@ -74,7 +96,7 @@ export default function VoiceLineCard({
                 {/* 左侧：序号与角色 */}
                 <div className="flex flex-col sm:w-40 shrink-0 border-r border-[var(--glass-stroke-base)]/60 pr-4">
                     <div className="text-xs text-[var(--glass-text-tertiary)] mb-1 font-medium">#{line.lineIndex}</div>
-                    <div className="inline-flex items-center px-2 py-1 bg-[var(--glass-tone-info-bg)]/80 text-[var(--glass-tone-info-fg)] text-xs rounded-md font-medium w-max max-w-full truncate" title={line.speaker}>
+                    <div className={`inline-flex items-center px-2 py-1 ${speakerColor.bg} ${speakerColor.text} text-xs rounded-md font-medium w-max max-w-full truncate`} title={line.speaker}>
                         {line.speaker}
                     </div>
                     <div className="mt-2 text-[10px]">

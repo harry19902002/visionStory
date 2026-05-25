@@ -61,6 +61,21 @@ export const GET = apiHandler(async (
       continue
     }
 
+    if (voice.provider === 'minimax') {
+      const previewAudioUrl = voice.previewAudioUrl ? signUrlIfNeeded(voice.previewAudioUrl) : undefined
+      speakerVoices[speaker] = {
+        provider: 'minimax',
+        voiceType: voice.voiceType,
+        voiceId: voice.voiceId,
+        speed: voice.speed,
+        pitch: voice.pitch,
+        vol: voice.vol,
+        ...(previewAudioUrl ? { previewAudioUrl } : {}),
+      }
+      continue
+    }
+
+    // Default to bailian
     const previewAudioUrl = voice.previewAudioUrl ? signUrlIfNeeded(voice.previewAudioUrl) : undefined
     speakerVoices[speaker] = {
       provider: 'bailian',
@@ -92,13 +107,16 @@ export const PATCH = apiHandler(async (
   const speaker = readTrimmedString(body?.speaker) ?? ''
   const voiceType = readTrimmedString(body?.voiceType) ?? 'uploaded'
   const providerRaw = readTrimmedString(body?.provider)?.toLowerCase() ?? null
-  if (!providerRaw || (providerRaw !== 'fal' && providerRaw !== 'bailian')) {
+  if (!providerRaw || (providerRaw !== 'fal' && providerRaw !== 'bailian' && providerRaw !== 'minimax')) {
     throw new ApiError('INVALID_PARAMS')
   }
   const provider = providerRaw
   const audioUrl = readTrimmedString(body?.audioUrl)
   const previewAudioUrl = readTrimmedString(body?.previewAudioUrl)
   const voiceId = readTrimmedString(body?.voiceId)
+  const speed = typeof body?.speed === 'number' ? body.speed : undefined
+  const pitch = typeof body?.pitch === 'number' ? body.pitch : undefined
+  const vol = typeof body?.vol === 'number' ? body.vol : undefined
 
   if (!episodeId) {
     throw new ApiError('INVALID_PARAMS')
@@ -109,7 +127,7 @@ export const PATCH = apiHandler(async (
   if (provider === 'fal' && !audioUrl) {
     throw new ApiError('INVALID_PARAMS')
   }
-  if (provider === 'bailian' && !voiceId) {
+  if ((provider === 'bailian' || provider === 'minimax') && !voiceId) {
     throw new ApiError('INVALID_PARAMS')
   }
 
@@ -140,6 +158,24 @@ export const PATCH = apiHandler(async (
       provider: 'fal',
       voiceType,
       audioUrl: audioUrlToStore,
+    }
+  } else if (provider === 'minimax') {
+    const previewCandidate = previewAudioUrl || audioUrl
+    const resolvedPreviewKey = previewCandidate
+      ? await resolveStorageKeyFromMediaValue(previewCandidate)
+      : null
+    const previewAudioUrlToStore = previewCandidate
+      ? (resolvedPreviewKey || previewCandidate)
+      : undefined
+
+    nextVoiceEntry = {
+      provider: 'minimax',
+      voiceType,
+      voiceId: voiceId!,
+      speed,
+      pitch,
+      vol,
+      ...(previewAudioUrlToStore ? { previewAudioUrl: previewAudioUrlToStore } : {}),
     }
   } else {
     const previewCandidate = previewAudioUrl || audioUrl

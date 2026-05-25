@@ -10,6 +10,7 @@ interface VoiceLineListProps {
   playingLineId: string | null
   analyzing: boolean
   getSpeakerVoiceUrl: (speaker: string) => string | null
+  hasSpeakerVoiceBinding?: (speaker: string) => boolean
   onTogglePlayAudio: (lineId: string, audioUrl: string) => void
   onDownloadSingle: (audioUrl: string) => void
   onGenerateLine: (lineId: string) => Promise<void>
@@ -28,6 +29,7 @@ export default function VoiceLineList({
   playingLineId,
   analyzing,
   getSpeakerVoiceUrl,
+  hasSpeakerVoiceBinding,
   onTogglePlayAudio,
   onDownloadSingle,
   onGenerateLine,
@@ -51,7 +53,7 @@ export default function VoiceLineList({
           isVoiceTaskRunning={runningLineIds.has(line.id)}
           statusState={voiceStatusStateByLineId.get(line.id) || null}
           isPlaying={playingLineId === line.id}
-          hasVoice={!!getSpeakerVoiceUrl(line.speaker)}
+          hasVoice={hasSpeakerVoiceBinding ? hasSpeakerVoiceBinding(line.speaker) : !!getSpeakerVoiceUrl(line.speaker)}
           onTogglePlay={onTogglePlayAudio}
           onDownload={onDownloadSingle}
           onGenerate={onGenerateLine}

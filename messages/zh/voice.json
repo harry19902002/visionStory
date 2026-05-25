@@ -55,7 +55,9 @@
         "uploadAudioDesc": "上传 MP3、WAV 等音频文件作为参考音色",
         "uploadQwenHint": "上传的音色后续只可使用 IndexTTS 合成，不可用于 QwenTTS。QwenTTS 必须使用 AI 设计音色。",
         "aiDesign": "AI 设计音色",
-        "aiDesignDesc": "使用 AI 生成专属参考音色"
+        "aiDesignDesc": "使用 AI 生成专属参考音色",
+        "cancel": "取消",
+        "confirm": "确认"
     },
     "embedded": {
         "linesStats": "{total} 条台词 · {audio} 已生成",
@@ -139,8 +141,12 @@
         "deleteAudioFailed": "删除配音失败",
         "uploadFailed": "上传音频失败",
         "voiceDesignFailed": "保存声音设计失败",
-        "emotionSaveFailed": "保存情绪设置失败",
-        "voiceGenerateFailed": "生成音频失败"
+        "voiceGenerateFailed": "生成音频失败",
+        "invalidAudioType": "仅支持 mp3, wav, m4a 等音频格式"
+    },
+    "generate": {
+        "startStoryboard": "开始绘制分镜 →",
+        "generating": "正在生成分镜..."
     },
     "alerts": {
         "insufficientBalance": "余额不足",

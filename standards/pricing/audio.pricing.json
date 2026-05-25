@@ -1,0 +1,56 @@
+[
+  {
+    "apiType": "voice",
+    "provider": "minimax",
+    "modelId": "speech-01-hd",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0
+    }
+  },
+  {
+    "apiType": "voice",
+    "provider": "minimax",
+    "modelId": "speech-01-turbo",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0
+    }
+  },
+  {
+    "apiType": "voice",
+    "provider": "minimax",
+    "modelId": "speech-02-hd",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0
+    }
+  },
+  {
+    "apiType": "voice",
+    "provider": "minimax",
+    "modelId": "speech-02-turbo",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0
+    }
+  },
+  {
+    "apiType": "voice",
+    "provider": "minimax",
+    "modelId": "speech-2.8-hd",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0
+    }
+  },
+  {
+    "apiType": "voice",
+    "provider": "minimax",
+    "modelId": "speech-2.8-turbo",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0
+    }
+  }
+]

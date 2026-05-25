@@ -190,6 +190,7 @@ const OPTIONAL_PRICING_PROVIDER_KEYS = new Set([
   'gemini-compatible',
   'bailian',
   'siliconflow',
+  'minimax',
 ])
 const OFFICIAL_ONLY_PROVIDER_KEYS = new Set(['bailian', 'siliconflow'])
 const RETIRED_PROVIDER_KEYS = new Set(['qwen'])

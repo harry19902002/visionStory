@@ -45,7 +45,7 @@ interface CharacterCardProps {
   projectId: string
   onConfirmSelection?: (characterId: string, appearanceId: string) => void  // 确认选择
   // 音色相关
-  onVoiceChange?: (characterId: string, customVoiceUrl?: string) => void
+  onVoiceChange?: (characterId: string, voiceType: string, voiceId: string, customVoiceUrl?: string) => void
   onVoiceDesign?: (characterId: string, characterName: string) => void  // AI 声音设计
   onVoiceSelectFromHub?: (characterId: string) => void  // 从资产中心选择音色
 }
@@ -265,6 +265,7 @@ export default function CharacterCard({
         characterId={character.id}
         characterName={character.name}
         customVoiceUrl={character.customVoiceUrl}
+        voiceId={character.voiceId}
         projectId={projectId}
         onVoiceChange={onVoiceChange}
         onVoiceDesign={onVoiceDesign}
@@ -432,6 +433,7 @@ export default function CharacterCard({
       characterId={character.id}
       characterName={character.name}
       customVoiceUrl={character.customVoiceUrl}
+      voiceId={character.voiceId}
       projectId={projectId}
       onVoiceChange={onVoiceChange}
       onVoiceDesign={onVoiceDesign}

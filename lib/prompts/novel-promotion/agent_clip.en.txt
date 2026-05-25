@@ -16,8 +16,8 @@ Character introductions:
 Output format (JSON array only):
 [
   {
-    "start": "exact start snippet from source text (>=5 chars)",
-    "end": "exact end snippet from source text (>=5 chars)",
+    "start": "exact start snippet from source text (5-15 chars, DO NOT put the entire clip here)",
+    "end": "exact end snippet from source text (5-15 chars, DO NOT put the entire clip here)",
     "summary": "short clip summary",
     "location": "best matched location name",
     "characters": ["Character A", "Character B"],
@@ -26,6 +26,12 @@ Output format (JSON array only):
 ]
 
 Rules:
+⚠️⚠️⚠️ BOUNDARY EXTRACTION RULES - PREVENT SYSTEM CRASH ⚠️⚠️⚠️
+- `start` MUST be a short snippet (5-15 chars) copied EXACTLY word-for-word from the VERY BEGINNING of the clip.
+- `end` MUST be a short snippet (5-15 chars) copied EXACTLY word-for-word from the VERY END of the clip.
+- ❌ NEVER put the entire clip content into the `start` field!
+- ❌ NEVER summarize, rephrase, or invent words! Extract the exact text as it appears in the source.
+- ❌ NEVER add punctuation (like quotes) if they are not in the source text!
 1. Keep clips contiguous, ordered, and fully covering the source text.
 2. Prefer natural scene/drama boundaries.
 3. Minimize over-splitting.

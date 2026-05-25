@@ -55,7 +55,9 @@
         "uploadAudioDesc": "Upload MP3, WAV or other audio files as reference voice",
         "uploadQwenHint": "Uploaded voices can only be synthesized with IndexTTS, not QwenTTS. QwenTTS requires an AI-designed voice.",
         "aiDesign": "AI Design Voice",
-        "aiDesignDesc": "Use AI to generate an exclusive reference voice"
+        "aiDesignDesc": "Use AI to generate an exclusive reference voice",
+        "cancel": "Cancel",
+        "confirm": "Confirm"
     },
     "embedded": {
         "linesStats": "{total} lines · {audio} generated",

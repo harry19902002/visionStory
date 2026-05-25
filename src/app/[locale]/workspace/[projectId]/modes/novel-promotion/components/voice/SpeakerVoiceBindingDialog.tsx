@@ -1,14 +1,16 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
+import MinimaxVoicePickerDialog from '../assets/MinimaxVoicePickerDialog'
 import VoicePickerDialog from '@/app/[locale]/workspace/asset-hub/components/VoicePickerDialog'
 import VoiceCreationModal from '@/app/[locale]/workspace/asset-hub/components/VoiceCreationModal'
 import { AppIcon } from '@/components/ui/icons'
 import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import type { InlineSpeakerVoiceBinding } from '@/lib/novel-promotion/stages/voice-stage-runtime/types'
 import { useProjectData } from '@/lib/query/hooks/useProjectData'
+import { useUserPreferences } from '@/lib/query/hooks/useUserPreferences'
 
 type BindingTab = 'select' | 'upload' | 'design'
 
@@ -17,6 +19,7 @@ interface SpeakerVoiceBindingDialogProps {
     speaker: string
     projectId: string
     episodeId: string
+    initialSpeakerVoice?: any // using any or SpeakerVoiceEntry if imported
     onClose: () => void
     onBound: (speaker: string, binding: InlineSpeakerVoiceBinding) => void
 }
@@ -31,6 +34,7 @@ export default function SpeakerVoiceBindingDialog({
     speaker,
     projectId,
     episodeId,
+    initialSpeakerVoice,
     onClose,
     onBound,
 }: SpeakerVoiceBindingDialogProps) {
@@ -40,7 +44,8 @@ export default function SpeakerVoiceBindingDialog({
     const [subDialogOpen, setSubDialogOpen] = useState(false)
 
     const { data: project } = useProjectData(projectId)
-    const audioModel = project?.novelPromotionData?.audioModel || ''
+    const { data: userPref } = useUserPreferences()
+    const audioModel = project?.novelPromotionData?.audioModel || userPref?.audioModel || ''
     const isMinimax = audioModel.toLowerCase().includes('minimax')
 
     const [advancedVoice, setAdvancedVoice] = useState<{
@@ -52,6 +57,24 @@ export default function SpeakerVoiceBindingDialog({
     const [speed, setSpeed] = useState<number>(1.0)
     const [pitch, setPitch] = useState<number>(0)
     const [vol, setVol] = useState<number>(1.0)
+    const [isMinimaxDialogOpen, setIsMinimaxDialogOpen] = useState(false)
+    const [minimaxVoiceId, setMinimaxVoiceId] = useState('male-qn-qingse')
+
+    useEffect(() => {
+        if (isOpen) {
+            if (initialSpeakerVoice?.provider === 'minimax') {
+                setMinimaxVoiceId(initialSpeakerVoice.voiceId || 'male-qn-qingse')
+                setSpeed(initialSpeakerVoice.speed ?? 1.0)
+                setPitch(initialSpeakerVoice.pitch ?? 0)
+                setVol(initialSpeakerVoice.vol ?? 1.0)
+            } else {
+                setMinimaxVoiceId('male-qn-qingse')
+                setSpeed(1.0)
+                setPitch(0)
+                setVol(1.0)
+            }
+        }
+    }, [isOpen, speaker, initialSpeakerVoice])
 
     const handleClose = useCallback(() => {
         setActiveTab('select')
@@ -64,7 +87,6 @@ export default function SpeakerVoiceBindingDialog({
         return window.confirm(t('uploadQwenHint'))
     }, [t])
 
-    // 从音色库选择后的回调
     const handleVoiceSelected = useCallback((voice: {
         id: string
         customVoiceUrl: string | null
@@ -114,21 +136,35 @@ export default function SpeakerVoiceBindingDialog({
     if (!isOpen) return null
     if (typeof document === 'undefined') return null
 
-    if (advancedVoice) {
+    // For Minimax, completely replace the inline binding dialog with the native Minimax configuration
+    if (isMinimax) {
         return createPortal(
             <>
-                <div className="fixed inset-0 z-[9999] glass-overlay" onClick={() => setAdvancedVoice(null)} />
+                <div className="fixed inset-0 z-[9999] glass-overlay" onClick={handleClose} />
                 <div className="fixed z-[10000] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 glass-surface-modal w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)]">
                         <div className="flex items-center gap-2 min-w-0">
                             <AppIcon name="mic" className="w-5 h-5 text-[var(--glass-tone-info-fg)] shrink-0" />
-                            <h2 className="font-semibold text-[var(--glass-text-primary)] truncate">MiniMax 配音高级设置</h2>
+                            <h2 className="font-semibold text-[var(--glass-text-primary)] truncate">MiniMax 配音设置 - {speaker}</h2>
                         </div>
-                        <button onClick={() => setAdvancedVoice(null)} className="glass-btn-base glass-btn-soft p-1 text-[var(--glass-text-tertiary)] shrink-0">
+                        <button onClick={handleClose} className="glass-btn-base glass-btn-soft p-1 text-[var(--glass-text-tertiary)] shrink-0">
                             <AppIcon name="close" className="w-5 h-5" />
                         </button>
                     </div>
                     <div className="p-5 space-y-5">
+                        <div>
+                            <label className="block text-xs font-medium text-[var(--glass-text-secondary)] mb-2">系统音色 (Voice)</label>
+                            <div className="flex gap-2 items-center">
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsMinimaxDialogOpen(true)}
+                                    className="flex-1 bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-base)] rounded-lg px-3 py-2 text-sm text-[var(--glass-text-primary)] hover:border-[var(--glass-stroke-focus)] transition-colors text-left truncate flex justify-between items-center"
+                                >
+                                    <span>{minimaxVoiceId || '选择系统音色'}</span>
+                                    <AppIcon name="chevronDown" className="w-5 h-5 text-[var(--glass-text-secondary)] flex-shrink-0" />
+                                </button>
+                            </div>
+                        </div>
                         <div>
                             <label className="block text-xs font-medium text-[var(--glass-text-secondary)] mb-2 flex justify-between">
                                 <span>语速 (Speed)</span>
@@ -164,22 +200,29 @@ export default function SpeakerVoiceBindingDialog({
                         </div>
                     </div>
                     <div className="flex gap-2 p-4 border-t border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)]">
-                        <button onClick={() => setAdvancedVoice(null)} className="glass-btn-base glass-btn-secondary flex-1 py-2 rounded-lg text-sm">{t('cancel', { defaultValue: '取消' })}</button>
+                        <button onClick={handleClose} className="glass-btn-base glass-btn-secondary flex-1 py-2 rounded-lg text-sm">{t('cancel', { defaultValue: '取消' })}</button>
                         <button onClick={() => {
                             onBound(speaker, {
                                 provider: 'minimax',
-                                voiceType: advancedVoice.voiceType,
-                                voiceId: advancedVoice.voiceId!,
+                                voiceType: 'preset',
+                                voiceId: minimaxVoiceId,
                                 speed,
                                 pitch,
-                                vol,
-                                ...(advancedVoice.customVoiceUrl ? { previewAudioUrl: advancedVoice.customVoiceUrl } : {})
+                                vol
                             })
-                            setAdvancedVoice(null)
                             onClose()
                         }} className="glass-btn-base glass-btn-primary flex-1 py-2 rounded-lg text-sm font-medium">{t('confirm', { defaultValue: '确认' })}</button>
                     </div>
                 </div>
+
+                <MinimaxVoicePickerDialog
+                    isOpen={isMinimaxDialogOpen}
+                    onClose={() => setIsMinimaxDialogOpen(false)}
+                    currentVoiceId={minimaxVoiceId}
+                    onSelect={(id) => {
+                        setMinimaxVoiceId(id)
+                    }}
+                />
             </>,
             document.body
         )

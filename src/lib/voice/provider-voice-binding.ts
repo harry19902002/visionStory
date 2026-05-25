@@ -224,13 +224,28 @@ function toBailianBinding(source: VoiceSource, voiceId: string | null): BailianV
 
 function toMinimaxBinding(source: VoiceSource, voiceId: string | null, speakerVoice?: SpeakerVoiceEntry | null): MinimaxVoiceGenerationBinding | null {
   if (!voiceId) return null
+
+  let actualVoiceId = voiceId;
+  let speed: number | undefined;
+  let pitch: number | undefined;
+  let vol: number | undefined;
+
+  // Character config might encode settings inside voiceId like: "voiceId|speed|pitch|vol"
+  if (source === 'character' && voiceId.includes('|')) {
+    const parts = voiceId.split('|');
+    actualVoiceId = parts[0];
+    if (parts.length > 1 && parts[1]) speed = parseFloat(parts[1]);
+    if (parts.length > 2 && parts[2]) pitch = parseInt(parts[2]);
+    if (parts.length > 3 && parts[3]) vol = parseFloat(parts[3]);
+  }
+
   return {
     provider: 'minimax',
     source,
-    voiceId,
-    ...(speakerVoice?.provider === 'minimax' && typeof speakerVoice.speed === 'number' ? { speed: speakerVoice.speed } : {}),
-    ...(speakerVoice?.provider === 'minimax' && typeof speakerVoice.pitch === 'number' ? { pitch: speakerVoice.pitch } : {}),
-    ...(speakerVoice?.provider === 'minimax' && typeof speakerVoice.vol === 'number' ? { vol: speakerVoice.vol } : {}),
+    voiceId: actualVoiceId,
+    ...(speed !== undefined ? { speed } : (speakerVoice?.provider === 'minimax' && typeof speakerVoice.speed === 'number' ? { speed: speakerVoice.speed } : {})),
+    ...(pitch !== undefined ? { pitch } : (speakerVoice?.provider === 'minimax' && typeof speakerVoice.pitch === 'number' ? { pitch: speakerVoice.pitch } : {})),
+    ...(vol !== undefined ? { vol } : (speakerVoice?.provider === 'minimax' && typeof speakerVoice.vol === 'number' ? { vol: speakerVoice.vol } : {})),
   }
 }
 

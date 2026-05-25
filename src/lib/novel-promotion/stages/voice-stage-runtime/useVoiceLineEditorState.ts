@@ -16,7 +16,7 @@ export function useVoiceLineEditorState({
   const [editingLineId, setEditingLineId] = useState<string | null>(null)
   const [editingContent, setEditingContent] = useState('')
   const [editingSpeaker, setEditingSpeaker] = useState('')
-  const [editingMatchedPanelId, setEditingMatchedPanelId] = useState('')
+  const [editingMatchedPanelId, setEditingMatchedPanelId] = useState<string | null>(null)
 
   const savingLineEditorState = isSavingLineEditor
     ? resolveTaskPresentationState({
@@ -39,7 +39,7 @@ export function useVoiceLineEditorState({
     setEditingLineId(null)
     setEditingContent('')
     setEditingSpeaker(speakerOptions[0] || '')
-    setEditingMatchedPanelId('')
+    setEditingMatchedPanelId(null)
     setIsLineEditorOpen(true)
   }, [speakerOptions])
 
@@ -55,7 +55,7 @@ export function useVoiceLineEditorState({
     setEditingLineId(null)
     setEditingContent('')
     setEditingSpeaker('')
-    setEditingMatchedPanelId('')
+    setEditingMatchedPanelId(null)
     setIsLineEditorOpen(false)
     setIsSavingLineEditor(false)
   }, [])

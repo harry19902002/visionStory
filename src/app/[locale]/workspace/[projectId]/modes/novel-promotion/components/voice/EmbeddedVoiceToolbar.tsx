@@ -15,6 +15,8 @@ interface EmbeddedVoiceToolbarProps {
     onAnalyze: () => void
     onDownloadAll: () => void
     onGenerateAll: () => void
+    onStartStoryboard?: () => void
+    isSubmittingStoryboardBuild?: boolean
 }
 
 export default function EmbeddedVoiceToolbar({
@@ -28,7 +30,9 @@ export default function EmbeddedVoiceToolbar({
     onAddLine,
     onAnalyze,
     onDownloadAll,
-    onGenerateAll
+    onGenerateAll,
+    onStartStoryboard,
+    isSubmittingStoryboardBuild
 }: EmbeddedVoiceToolbarProps) {
     const t = useTranslations('voice')
     const voiceTaskRunningState = isBatchSubmitting
@@ -125,6 +129,15 @@ export default function EmbeddedVoiceToolbar({
                         </>
                     )}
                 </button>
+                {onStartStoryboard && (
+                    <button
+                        onClick={onStartStoryboard}
+                        disabled={isSubmittingStoryboardBuild}
+                        className="glass-btn-base glass-btn-primary flex items-center gap-2 px-4 py-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+                    >
+                        {isSubmittingStoryboardBuild ? t("generate.generating") : t("generate.startStoryboard")}
+                    </button>
+                )}
             </div>
         </div>
     )

@@ -1,0 +1,92 @@
+[
+  {
+    "modelType": "audio",
+    "provider": "minimax",
+    "modelId": "speech-01-hd",
+    "capabilities": {
+      "audio": {
+        "voiceOptions": [
+          "male-qn-qingse",
+          "female-shaonv",
+          "female-yujie",
+          "male-qn-jingying"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "audio",
+    "provider": "minimax",
+    "modelId": "speech-01-turbo",
+    "capabilities": {
+      "audio": {
+        "voiceOptions": [
+          "male-qn-qingse",
+          "female-shaonv",
+          "female-yujie",
+          "male-qn-jingying"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "audio",
+    "provider": "minimax",
+    "modelId": "speech-02-hd",
+    "capabilities": {
+      "audio": {
+        "voiceOptions": [
+          "male-qn-qingse",
+          "female-shaonv",
+          "female-yujie",
+          "male-qn-jingying"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "audio",
+    "provider": "minimax",
+    "modelId": "speech-02-turbo",
+    "capabilities": {
+      "audio": {
+        "voiceOptions": [
+          "male-qn-qingse",
+          "female-shaonv",
+          "female-yujie",
+          "male-qn-jingying"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "audio",
+    "provider": "minimax",
+    "modelId": "speech-2.8-hd",
+    "capabilities": {
+      "audio": {
+        "voiceOptions": [
+          "male-qn-qingse",
+          "female-shaonv",
+          "female-yujie",
+          "male-qn-jingying"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "audio",
+    "provider": "minimax",
+    "modelId": "speech-2.8-turbo",
+    "capabilities": {
+      "audio": {
+        "voiceOptions": [
+          "male-qn-qingse",
+          "female-shaonv",
+          "female-yujie",
+          "male-qn-jingying"
+        ]
+      }
+    }
+  }
+]

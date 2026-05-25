@@ -45,6 +45,8 @@ export function useVoiceStageRuntime({
   onVoiceLineClick,
   onVoiceLinesChanged,
   onOpenAssetLibraryForCharacter,
+  onStartStoryboard,
+  isSubmittingStoryboardBuild,
 }: VoiceStageShellProps) {
   const t = useTranslations('voice')
   const router = useRouter()
@@ -97,6 +99,7 @@ export function useVoiceStageRuntime({
     speakerOptions,
     matchCharacterBySpeaker,
     getSpeakerVoiceUrl,
+    hasSpeakerVoiceBinding,
     linesWithVoice,
     linesWithAudio,
     allSpeakersHaveVoice,
@@ -200,7 +203,7 @@ export function useVoiceStageRuntime({
     editingLineId,
     editingContent,
     editingSpeaker,
-    editingMatchedPanelId,
+    editingMatchedPanelId: editingMatchedPanelId ?? '',
     setVoiceLines,
     setPendingVoiceGenerationByLineId,
     setIsSavingLineEditor,
@@ -280,7 +283,7 @@ export function useVoiceStageRuntime({
         editingLineId={editingLineId}
         editingContent={editingContent}
         editingSpeaker={editingSpeaker}
-        editingMatchedPanelId={editingMatchedPanelId}
+        editingMatchedPanelId={editingMatchedPanelId ?? ''}
         speakerOptions={speakerOptions}
         bindablePanelOptions={bindablePanelOptions}
         savingLineEditorState={savingLineEditorState}
@@ -297,6 +300,9 @@ export function useVoiceStageRuntime({
         onEditingSpeakerChange={setEditingSpeaker}
         onEditingMatchedPanelIdChange={setEditingMatchedPanelId}
         getSpeakerVoiceUrl={getSpeakerVoiceUrl}
+        hasSpeakerVoiceBinding={hasSpeakerVoiceBinding}
+        onStartStoryboard={onStartStoryboard}
+        isSubmittingStoryboardBuild={isSubmittingStoryboardBuild}
       >
         <VoiceLineList
           voiceLines={voiceLines}
@@ -305,6 +311,7 @@ export function useVoiceStageRuntime({
           playingLineId={playingLineId}
           analyzing={analyzing}
           getSpeakerVoiceUrl={getSpeakerVoiceUrl}
+          hasSpeakerVoiceBinding={hasSpeakerVoiceBinding}
           onTogglePlayAudio={handleTogglePlayAudio}
           onDownloadSingle={handleDownloadSingle}
           onGenerateLine={handleGenerateLine}
@@ -323,6 +330,7 @@ export function useVoiceStageRuntime({
         speaker={inlineBindingSpeaker ?? ''}
         projectId={projectId}
         episodeId={episodeId}
+        initialSpeakerVoice={inlineBindingSpeaker ? speakerVoices[inlineBindingSpeaker] : undefined}
         onClose={handleCloseInlineBinding}
         onBound={handleInlineVoiceBound}
       />

@@ -48,8 +48,11 @@ interface VoiceControlPanelProps {
   onSaveEdit: () => Promise<void>
   onEditingContentChange: (value: string) => void
   onEditingSpeakerChange: (value: string) => void
-  onEditingMatchedPanelIdChange: (value: string) => void
+  onEditingMatchedPanelIdChange: (value: string | null) => void
   getSpeakerVoiceUrl: (speaker: string) => string | null
+  hasSpeakerVoiceBinding?: (speaker: string) => boolean
+  onStartStoryboard?: () => void
+  isSubmittingStoryboardBuild?: boolean
 }
 
 export default function VoiceControlPanel({
@@ -88,6 +91,9 @@ export default function VoiceControlPanel({
   onEditingSpeakerChange,
   onEditingMatchedPanelIdChange,
   getSpeakerVoiceUrl,
+  hasSpeakerVoiceBinding,
+  onStartStoryboard,
+  isSubmittingStoryboardBuild,
 }: VoiceControlPanelProps) {
   const t = useTranslations('voice')
 
@@ -100,6 +106,8 @@ export default function VoiceControlPanel({
           onAnalyze={onAnalyze}
           onGenerateAll={onGenerateAll}
           onDownloadAll={onDownloadAll}
+          onStartStoryboard={onStartStoryboard}
+          isSubmittingStoryboardBuild={isSubmittingStoryboardBuild}
           analyzing={analyzing}
           isBatchSubmitting={isBatchSubmittingAll}
           runningCount={runningLineCount}
@@ -122,6 +130,8 @@ export default function VoiceControlPanel({
           onAnalyze={onAnalyze}
           onDownloadAll={onDownloadAll}
           onGenerateAll={onGenerateAll}
+          onStartStoryboard={onStartStoryboard}
+          isSubmittingStoryboardBuild={isSubmittingStoryboardBuild}
         />
       )}
 
@@ -130,6 +140,7 @@ export default function VoiceControlPanel({
           speakers={speakers}
           speakerStats={speakerStats}
           getSpeakerVoiceUrl={getSpeakerVoiceUrl}
+          hasSpeakerVoiceBinding={hasSpeakerVoiceBinding}
           onOpenAssetLibrary={onOpenAssetLibraryForSpeaker}
           onOpenInlineBinding={onOpenInlineBinding}
           hasSpeakerCharacter={hasSpeakerCharacter}

@@ -17,6 +17,8 @@ interface VoiceToolbarProps {
     totalLines: number
     linesWithVoice: number
     linesWithAudio: number
+    onStartStoryboard?: () => void
+    isSubmittingStoryboardBuild?: boolean
 }
 
 export default function VoiceToolbar({
@@ -32,7 +34,9 @@ export default function VoiceToolbar({
     allSpeakersHaveVoice,
     totalLines,
     linesWithVoice,
-    linesWithAudio
+    linesWithAudio,
+    onStartStoryboard,
+    isSubmittingStoryboardBuild
 }: VoiceToolbarProps) {
     const t = useTranslations('voice')
     const voiceTaskRunningState = isBatchSubmitting
@@ -98,6 +102,15 @@ export default function VoiceToolbar({
                             <TaskStatusInline state={voiceDownloadRunningState} className="text-white [&>span]:text-white [&_svg]:text-white" />
                         ) : t("toolbar.downloadAll")}
                     </button>
+                    {onStartStoryboard && (
+                        <button
+                            onClick={onStartStoryboard}
+                            disabled={isSubmittingStoryboardBuild}
+                            className="glass-btn-base glass-btn-primary flex items-center gap-2 px-5 py-2.5 font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+                        >
+                            {isSubmittingStoryboardBuild ? t("generate.generating") : t("generate.startStoryboard")}
+                        </button>
+                    )}
                 </div>
                 <div className="text-sm text-[var(--glass-text-tertiary)]">
                     {t("toolbar.stats", { total: totalLines, withVoice: linesWithVoice, withAudio: linesWithAudio })}

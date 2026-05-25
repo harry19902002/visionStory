@@ -32,6 +32,10 @@ Rules:
     - **Dialogue**: Quoted speech, direct speech. Set "speaker" to the character's name.
     - **Inner Monologue / 1st Person Narration**: Thoughts or narration clearly from a specific character's perspective. Set "speaker" to "CharacterName (Narration)" or "CharacterName (旁白)".
     - **General Narration**: Third-person objective narration, action description, scene description. Set "speaker" to "Narrator".
+   ✂️ LENGTH SPLITTING RULE: Since each video panel is roughly 4-5 seconds long, you MUST split long sentences or paragraphs into shorter segments that take about 4 seconds to speak.
+    - 4 seconds of speech is roughly 10-15 English words (or 15-25 Chinese characters).
+    - If a line is too long, split it at natural punctuation marks (commas, periods) into multiple consecutive JSON objects.
+    - Each split segment's `content` should ideally be kept under 4 seconds of reading time. They should retain the same speaker and emotion.
 2. The entire input text should be extracted except for chapter titles or explicit non-verbal meta-annotations.
 3. emotionStrength must be between 0.1 and 0.5.
 4. Match panel by order + speaker consistency + semantic relevance (Note: "CharacterName (旁白)" matches "CharacterName" in the panel).

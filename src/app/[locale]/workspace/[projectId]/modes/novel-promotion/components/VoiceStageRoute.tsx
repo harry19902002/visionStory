@@ -20,6 +20,8 @@ export default function VoiceStageRoute() {
           ? runtime.onOpenAssetLibraryForCharacter(characterId, false)
           : runtime.onOpenAssetLibrary()
       }
+      onStartStoryboard={runtime.onRunScriptToStoryboard}
+      isSubmittingStoryboardBuild={runtime.isConfirmingAssets || runtime.isStartingScriptToStoryboard}
     />
   )
 }

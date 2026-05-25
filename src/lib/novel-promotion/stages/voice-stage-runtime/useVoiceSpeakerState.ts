@@ -20,6 +20,12 @@ export function useVoiceSpeakerState({
   const matchCharacterBySpeaker = useCallback((speaker: string): Character | undefined => {
     const exactMatch = characters.find((character) => character.name === speaker)
     if (exactMatch) return exactMatch
+
+    // 如果发言人是旁白类型，不再进行模糊匹配，确保其音色可以单独绑定（内联绑定）
+    if (/旁白|narrator/i.test(speaker)) {
+      return undefined
+    }
+
     return characters.find((character) => character.name.includes(speaker) || speaker.includes(character.name))
   }, [characters])
 

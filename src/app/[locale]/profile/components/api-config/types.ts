@@ -167,6 +167,12 @@ export const PRESET_MODELS: PresetModel[] = [
     { modelId: 'fal-ai/index-tts-2/text-to-speech', name: 'IndexTTS 2', type: 'audio', provider: 'fal' },
     { modelId: 'qwen3-tts-vd-2026-01-26', name: 'Qwen3 TTS', type: 'audio', provider: 'bailian' },
     { modelId: 'qwen-voice-design', name: 'Qwen Voice Design', type: 'audio', provider: 'bailian' },
+    { modelId: 'speech-01-hd', name: 'Speech 01 HD', type: 'audio', provider: 'minimax' },
+    { modelId: 'speech-01-turbo', name: 'Speech 01 Turbo', type: 'audio', provider: 'minimax' },
+    { modelId: 'speech-02-hd', name: 'Speech 02 HD', type: 'audio', provider: 'minimax' },
+    { modelId: 'speech-02-turbo', name: 'Speech 02 Turbo', type: 'audio', provider: 'minimax' },
+    { modelId: 'speech-2.8-hd', name: 'Speech 2.8 HD', type: 'audio', provider: 'minimax' },
+    { modelId: 'speech-2.8-turbo', name: 'Speech 2.8 Turbo', type: 'audio', provider: 'minimax' },
     // 口型同步模型
     { modelId: 'fal-ai/kling-video/lipsync/audio-to-video', name: 'Kling Lip Sync', type: 'lipsync', provider: 'fal' },
     { modelId: 'vidu-lipsync', name: 'Vidu Lip Sync', type: 'lipsync', provider: 'vidu' },

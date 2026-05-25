@@ -33,6 +33,10 @@ type StoryboardClipInput = {
   location: string | null
   props?: string | null
   screenplay: string | null
+  voiceLines?: {
+    speaker: string
+    content: string
+  }[]
 }
 
 export type StoryboardRetryPhase = 'phase1' | 'phase2_cinematography' | 'phase2_acting' | 'phase3_detail'
@@ -428,6 +432,12 @@ export async function runScriptToStoryboardAtomicRetry(params: {
       .replace('{characters_full_description}', filteredFullDescription)
       .replace('{props_description}', filteredPropsDescription)
       .replace('{clip_json}', clipJson)
+      .replace(
+        '{voice_lines_json}',
+        params.clip.voiceLines?.length
+          ? JSON.stringify(params.clip.voiceLines, null, 2)
+          : '[]'
+      )
     const screenplay = parseScreenplay(params.clip.screenplay)
     if (screenplay) {
       phase1Prompt = phase1Prompt.replace('{clip_content}', `【剧本格式】\n${JSON.stringify(screenplay, null, 2)}`)

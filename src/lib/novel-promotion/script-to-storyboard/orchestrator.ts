@@ -53,6 +53,10 @@ type ClipInput = {
   location: string | null
   props?: string | null
   screenplay: string | null
+  voiceLines?: {
+    speaker: string
+    content: string
+  }[]
 }
 
 export type ScriptToStoryboardPromptTemplates = {
@@ -351,6 +355,12 @@ export async function runScriptToStoryboardOrchestrator(
         .replace('{characters_full_description}', filteredFullDescription)
         .replace('{props_description}', filteredPropsDescription)
         .replace('{clip_json}', clipJson)
+        .replace(
+          '{voice_lines_json}',
+          clip.voiceLines?.length
+            ? JSON.stringify(clip.voiceLines, null, 2)
+            : '[]'
+        )
 
       const screenplay = parseScreenplay(clip.screenplay)
       if (screenplay) {

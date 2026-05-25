@@ -262,6 +262,24 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
         displayMode: 'detail',
       })
 
+      const episodeVoiceLines = await prisma.novelPromotionVoiceLine.findMany({
+        where: { episodeId },
+        orderBy: { lineIndex: 'asc' },
+      })
+      
+      const getClipVoiceLines = (clipContent: string | null) => {
+        const clipVoiceLines = []
+        const content = clipContent || ''
+        const normalizedClipContent = content.replace(/\s+/g, '')
+        for (const vl of episodeVoiceLines) {
+          const normalizedVlContent = vl.content.replace(/\s+/g, '')
+          if (normalizedClipContent.includes(normalizedVlContent) || normalizedVlContent.includes(normalizedClipContent)) {
+            clipVoiceLines.push({ speaker: vl.speaker, content: vl.content })
+          }
+        }
+        return clipVoiceLines
+      }
+
       const orchestratorResult: ScriptToStoryboardOrchestratorResult = await (async () => {
         try {
           return await withInternalLLMStreamCallbacks(
@@ -285,6 +303,7 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
                     location: clip.location,
                     props: readNullableText(clip as unknown as Record<string, unknown>, 'props'),
                     screenplay: clip.screenplay,
+                    voiceLines: getClipVoiceLines(clip.content),
                   },
                   clipIndex,
                   totalClipCount: clips.length,
@@ -328,6 +347,7 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
                     location: clip.location,
                     props: readNullableText(clip as unknown as Record<string, unknown>, 'props'),
                     screenplay: clip.screenplay,
+                    voiceLines: getClipVoiceLines(clip.content),
                   })),
                   novelPromotionData: {
                     characters: novelData.characters || [],

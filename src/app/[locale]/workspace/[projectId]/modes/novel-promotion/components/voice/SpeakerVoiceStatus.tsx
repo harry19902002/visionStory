@@ -10,6 +10,8 @@ interface SpeakerVoiceStatusProps {
     onOpenInlineBinding?: (speaker: string) => void
     /** 判断发言人是否有匹配的项目角色 */
     hasSpeakerCharacter?: (speaker: string) => boolean
+    /** 是否有音色绑定（替代单纯的 URL 检查，因为有些系统音色只有 ID 没有 URL） */
+    hasSpeakerVoiceBinding?: (speaker: string) => boolean
     embedded?: boolean
 }
 
@@ -20,6 +22,7 @@ export default function SpeakerVoiceStatus({
     onOpenAssetLibrary,
     onOpenInlineBinding,
     hasSpeakerCharacter,
+    hasSpeakerVoiceBinding,
     embedded = false
 }: SpeakerVoiceStatusProps) {
     const t = useTranslations('voice')
@@ -46,7 +49,7 @@ export default function SpeakerVoiceStatus({
 
     // 内部渲染扬声器卡片
     const renderSpeakerCard = (speaker: string) => {
-        const hasVoice = !!getSpeakerVoiceUrl(speaker)
+        const hasVoice = hasSpeakerVoiceBinding ? hasSpeakerVoiceBinding(speaker) : !!getSpeakerVoiceUrl(speaker)
         const count = speakerStats[speaker]
         const hasCharacter = hasSpeakerCharacter ? hasSpeakerCharacter(speaker) : true
         return (

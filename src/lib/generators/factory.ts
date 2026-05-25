@@ -117,6 +117,9 @@ export function createAudioGenerator(provider: string): AudioGenerator {
             return new BailianAudioGenerator()
         case 'siliconflow':
             return new SiliconFlowAudioGenerator()
+        case 'minimax':
+            const { MinimaxTTSGenerator } = require('./audio/minimax')
+            return new MinimaxTTSGenerator()
         default:
             throw new Error(`Unknown audio generator provider: ${provider}`)
     }

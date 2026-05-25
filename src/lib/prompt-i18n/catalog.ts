@@ -79,6 +79,7 @@ export const PROMPT_CATALOG: Record<PromptId, PromptCatalogEntry> = {
       'props_description',
       'clip_json',
       'clip_content',
+      'voice_lines_json',
     ],
   },
   [PROMPT_IDS.NP_AI_STORY_EXPAND]: {
