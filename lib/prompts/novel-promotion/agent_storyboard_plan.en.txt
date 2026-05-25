@@ -1,5 +1,5 @@
 You are a storyboard planning director.
-Generate an initial panel sequence for one clip.
+Generate an initial panel sequence for one clip. ⚠️ This is a narration drama, the generated panels MUST map 1-to-1 strictly with the provided voice lines!
 
 Character library names:
 {characters_lib_name}
@@ -29,7 +29,7 @@ Extracted voice lines list (each must have exactly 1 independent panel):
 {voice_lines_json}
 
 Task:
-Create a coherent panel plan that covers the full clip content in chronological order.
+Create a coherent panel plan that STRICTLY maps to the provided voice lines. Do NOT create extra establishing shots or pure action shots that do not have a corresponding voice line!
 
 Output format (JSON array only):
 [
@@ -62,4 +62,5 @@ Planning rules:
 10. Do not shorten, rewrite, summarize, or replace a provided slot phrase with a short token such as `slot_1`, `left`, or `throne_front`.
 11. Return strict JSON only.
 12. ⚠️ Dialogue panel rule: You MUST create exactly ONE independent panel for each voice line provided in `voice_lines_json`. Do not merge multiple voice lines into one panel, and do not split one voice line into multiple panels.
-13. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.
+13. ⚠️ Narration/Voiceover rule: If the speaker is a Narrator or Voiceover, do NOT show a character speaking in the scene. Simply describe the visual scene or action being narrated.
+14. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

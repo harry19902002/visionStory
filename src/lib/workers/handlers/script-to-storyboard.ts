@@ -267,17 +267,35 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
         orderBy: { lineIndex: 'asc' },
       })
       
-      const getClipVoiceLines = (clipContent: string | null) => {
-        const clipVoiceLines = []
-        const content = clipContent || ''
-        const normalizedClipContent = content.replace(/\s+/g, '')
-        for (const vl of episodeVoiceLines) {
-          const normalizedVlContent = vl.content.replace(/\s+/g, '')
-          if (normalizedClipContent.includes(normalizedVlContent) || normalizedVlContent.includes(normalizedClipContent)) {
-            clipVoiceLines.push({ speaker: vl.speaker, content: vl.content })
+      const clipVoiceLinesMap = new Map<string, typeof episodeVoiceLines>()
+      for (const clip of clips) {
+        clipVoiceLinesMap.set(clip.id, [])
+      }
+
+      let currentClipIdx = 0
+      for (const vl of episodeVoiceLines) {
+        const vlText = vl.content.replace(/[^\p{L}\p{N}]/gu, '')
+        let bestClipIdx = currentClipIdx
+        let found = false
+
+        for (let i = currentClipIdx; i < clips.length; i++) {
+          const clipText = (clips[i].content || '').replace(/[^\p{L}\p{N}]/gu, '')
+          if (clipText.includes(vlText) || vlText.includes(clipText)) {
+            bestClipIdx = i
+            found = true
+            break
           }
         }
-        return clipVoiceLines
+        
+        clipVoiceLinesMap.get(clips[bestClipIdx].id)!.push(vl)
+        currentClipIdx = bestClipIdx
+      }
+
+      const getClipVoiceLines = (clipId: string) => {
+        return (clipVoiceLinesMap.get(clipId) || []).map(vl => ({
+          speaker: vl.speaker,
+          content: vl.content
+        }))
       }
 
       const orchestratorResult: ScriptToStoryboardOrchestratorResult = await (async () => {
@@ -303,7 +321,7 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
                     location: clip.location,
                     props: readNullableText(clip as unknown as Record<string, unknown>, 'props'),
                     screenplay: clip.screenplay,
-                    voiceLines: getClipVoiceLines(clip.content),
+                    voiceLines: getClipVoiceLines(clip.id),
                   },
                   clipIndex,
                   totalClipCount: clips.length,
@@ -347,7 +365,7 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
                     location: clip.location,
                     props: readNullableText(clip as unknown as Record<string, unknown>, 'props'),
                     screenplay: clip.screenplay,
-                    voiceLines: getClipVoiceLines(clip.content),
+                    voiceLines: getClipVoiceLines(clip.id),
                   })),
                   novelPromotionData: {
                     characters: novelData.characters || [],
@@ -474,81 +492,45 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
         }
       }
 
-      if (!episode.novelText || !episode.novelText.trim()) {
-        throw new Error('No novel text to analyze')
-      }
-
-      const voicePrompt = buildPrompt({
-        promptId: PROMPT_IDS.NP_VOICE_ANALYSIS,
-        locale: job.data.locale,
-        variables: {
-          input: episode.novelText,
-          characters_lib_name: (novelData.characters || []).length > 0
-            ? (novelData.characters || []).map((item) => item.name).join('、')
-            : '无',
-          characters_introduction: buildCharactersIntroduction(novelData.characters || []),
-          storyboard_json: buildStoryboardJsonFromClipPanels(orchestratorResult.clipPanels),
-        },
-      })
-
-      let voiceLineRows: JsonRecord[] | null = null
-      let voiceLastError: Error | null = null
-      const voiceStepMeta: ScriptToStoryboardStepMeta = {
-        stepId: 'voice_analyze',
-        stepTitle: 'progress.streamStep.voiceAnalyze',
-        stepIndex: orchestratorResult.summary.totalStepCount,
-        stepTotal: orchestratorResult.summary.totalStepCount,
-        retryable: true,
-      }
-      try {
-        for (let voiceAttempt = 1; voiceAttempt <= MAX_VOICE_ANALYZE_ATTEMPTS; voiceAttempt++) {
-          const meta: ScriptToStoryboardStepMeta = {
-            ...voiceStepMeta,
-            stepAttempt: voiceAttempt,
+      // 不再使用大模型重新分析台词，直接使用已有的 episodeVoiceLines 进行1对1映射
+      const voiceLineRows: JsonRecord[] = []
+      
+      for (const clipEntry of orchestratorResult.clipPanels) {
+        const clipVoiceLines = clipVoiceLinesMap.get(clipEntry.clipId) || []
+        
+        for (let i = 0; i < clipVoiceLines.length; i++) {
+          const vl = clipVoiceLines[i]
+          const panel = clipEntry.finalPanels[i]
+          
+          if (panel) {
+            panel.source_text = vl.content
           }
-          try {
-            const voiceOutput = await withInternalLLMStreamCallbacks(
-              callbacks,
-              async () => await runStep(meta, voicePrompt, 'voice_analyze', 2600),
-            )
-            voiceLineRows = parseVoiceLinesJson(voiceOutput.text)
-            break
-          } catch (error) {
-            if (error instanceof TaskTerminatedError) {
-              throw error
-            }
-            voiceLastError = error instanceof Error ? error : new Error(String(error))
-            if (voiceAttempt < MAX_VOICE_ANALYZE_ATTEMPTS) {
-              await reportTaskProgress(job, 84, {
-                stage: 'script_to_storyboard_step',
-                stageLabel: 'progress.stage.scriptToStoryboardStep',
-                displayMode: 'detail',
-                message: `台词分析失败，准备重试 (${voiceAttempt + 1}/${MAX_VOICE_ANALYZE_ATTEMPTS})`,
-                stepId: voiceStepMeta.stepId,
-                stepAttempt: voiceAttempt + 1,
-                stepTitle: voiceStepMeta.stepTitle,
-                stepIndex: voiceStepMeta.stepIndex,
-                stepTotal: voiceStepMeta.stepTotal,
-              })
-            }
-          }
+          
+          voiceLineRows.push({
+            speaker: vl.speaker,
+            content: vl.content,
+            lineIndex: vl.lineIndex,
+            emotionStrength: vl.emotionStrength || 0.5,
+            matchedPanel: panel ? {
+              storyboardId: clipEntry.clipId,
+              panelIndex: i
+            } : null
+          })
         }
-      } finally {
-        await callbacks.flush()
       }
-      if (!voiceLineRows) {
-        throw voiceLastError!
+      
+      const mappedLineIndexes = new Set(voiceLineRows.map(r => r.lineIndex as number))
+      for (const vl of episodeVoiceLines) {
+        if (!mappedLineIndexes.has(vl.lineIndex)) {
+           voiceLineRows.push({
+            speaker: vl.speaker,
+            content: vl.content,
+            lineIndex: vl.lineIndex,
+            emotionStrength: vl.emotionStrength || 0.5,
+            matchedPanel: null
+          })
+        }
       }
-
-      await createArtifact({
-        runId,
-        stepKey: 'voice_analyze',
-        artifactType: 'voice.lines',
-        refId: episodeId,
-        payload: {
-          lines: voiceLineRows,
-        },
-      })
 
       await assertRunActive('script_to_storyboard_voice_persist')
       const persisted = await persistStoryboardOutputs({

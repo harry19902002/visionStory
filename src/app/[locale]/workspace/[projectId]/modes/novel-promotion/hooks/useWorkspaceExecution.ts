@@ -6,6 +6,7 @@ import {
   useAnalyzeProjectAssets,
   useScriptToStoryboardRunStream,
   useStoryToScriptRunStream,
+  useVoiceAnalyzeRunStream,
 } from '@/lib/query/hooks'
 
 interface UseWorkspaceExecutionParams {
@@ -73,6 +74,7 @@ export function useWorkspaceExecution({
   const storageScope = `${projectId}:${episodeId || 'global'}`
   const storyToScriptMinimizedStorageKey = `novel-promotion:story-to-script:minimized:${storageScope}`
   const scriptToStoryboardMinimizedStorageKey = `novel-promotion:script-to-storyboard:minimized:${storageScope}`
+  const voiceAnalyzeMinimizedStorageKey = `novel-promotion:voice-analyze:minimized:${storageScope}`
 
   const [isSubmittingTTS] = useState(false)
   const [isAssetAnalysisRunning, setIsAssetAnalysisRunning] = useState(false)
@@ -85,13 +87,19 @@ export function useWorkspaceExecution({
   const [scriptToStoryboardConsoleMinimized, setScriptToStoryboardConsoleMinimized] = useState(
     () => readSessionBoolean(scriptToStoryboardMinimizedStorageKey),
   )
+  const [voiceAnalyzeConsoleMinimized, setVoiceAnalyzeConsoleMinimized] = useState(
+    () => readSessionBoolean(voiceAnalyzeMinimizedStorageKey),
+  )
 
   const storyToScriptStream = useStoryToScriptRunStream({ projectId, episodeId })
   const scriptToStoryboardStream = useScriptToStoryboardRunStream({ projectId, episodeId })
+  const voiceAnalyzeStream = useVoiceAnalyzeRunStream({ projectId, episodeId })
   const handledStoryToScriptRunIdsRef = useRef<Set<string>>(new Set())
   const handledScriptToStoryboardRunIdsRef = useRef<Set<string>>(new Set())
+  const handledVoiceAnalyzeRunIdsRef = useRef<Set<string>>(new Set())
   const storyToScriptWasActiveRef = useRef(false)
   const scriptToStoryboardWasActiveRef = useRef(false)
+  const voiceAnalyzeWasActiveRef = useRef(false)
 
   const finalizeStoryToScriptSuccess = useCallback(async (runId: string) => {
     const normalizedRunId = runId.trim()
@@ -134,6 +142,25 @@ export function useWorkspaceExecution({
     scriptToStoryboardStream.reset()
   }, [onRefresh, onStageChange, scriptToStoryboardStream])
 
+  const finalizeVoiceAnalyzeSuccess = useCallback(async (runId: string) => {
+    const normalizedRunId = runId.trim()
+    if (!normalizedRunId) return
+    if (handledVoiceAnalyzeRunIdsRef.current.has(normalizedRunId)) return
+    handledVoiceAnalyzeRunIdsRef.current.add(normalizedRunId)
+
+    try {
+      await onRefresh()
+    } catch (refreshError) {
+      _ulogInfo('[WorkspaceExecution] refresh after voice-analyze completed failed', {
+        runId: normalizedRunId,
+        message: getErrorMessage(refreshError),
+      })
+    }
+
+    setVoiceAnalyzeConsoleMinimized(true)
+    voiceAnalyzeStream.reset()
+  }, [onRefresh, voiceAnalyzeStream])
+
   useEffect(() => {
     setStoryToScriptConsoleMinimized(readSessionBoolean(storyToScriptMinimizedStorageKey))
   }, [storyToScriptMinimizedStorageKey])
@@ -141,6 +168,10 @@ export function useWorkspaceExecution({
   useEffect(() => {
     setScriptToStoryboardConsoleMinimized(readSessionBoolean(scriptToStoryboardMinimizedStorageKey))
   }, [scriptToStoryboardMinimizedStorageKey])
+
+  useEffect(() => {
+    setVoiceAnalyzeConsoleMinimized(readSessionBoolean(voiceAnalyzeMinimizedStorageKey))
+  }, [voiceAnalyzeMinimizedStorageKey])
 
   useEffect(() => {
     writeSessionBoolean(storyToScriptMinimizedStorageKey, storyToScriptConsoleMinimized)
@@ -346,8 +377,11 @@ export function useWorkspaceExecution({
     setStoryToScriptConsoleMinimized,
     scriptToStoryboardConsoleMinimized,
     setScriptToStoryboardConsoleMinimized,
+    voiceAnalyzeConsoleMinimized,
+    setVoiceAnalyzeConsoleMinimized,
     storyToScriptStream,
     scriptToStoryboardStream,
+    voiceAnalyzeStream,
     handleGenerateTTS,
     handleAnalyzeAssets,
     runStoryToScriptFlow,

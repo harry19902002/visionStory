@@ -9,10 +9,12 @@ import type { VideoPricingTier } from '@/lib/model-pricing/video-tier'
 import type {
   useScriptToStoryboardRunStream,
   useStoryToScriptRunStream,
+  useVoiceAnalyzeRunStream,
 } from '@/lib/query/hooks'
 
 type StoryToScriptStreamState = ReturnType<typeof useStoryToScriptRunStream>
 type ScriptToStoryboardStreamState = ReturnType<typeof useScriptToStoryboardRunStream>
+type VoiceAnalyzeStreamState = ReturnType<typeof useVoiceAnalyzeRunStream>
 
 interface ProjectSnapshotInput {
   projectData: unknown
@@ -95,8 +97,11 @@ interface BuildWorkspaceControllerViewModelParams {
     setStoryToScriptConsoleMinimized: (minimized: boolean) => void
     scriptToStoryboardConsoleMinimized: boolean
     setScriptToStoryboardConsoleMinimized: (minimized: boolean) => void
+    voiceAnalyzeConsoleMinimized: boolean
+    setVoiceAnalyzeConsoleMinimized: (minimized: boolean) => void
     storyToScriptStream: StoryToScriptStreamState
     scriptToStoryboardStream: ScriptToStoryboardStreamState
+    voiceAnalyzeStream: VoiceAnalyzeStreamState
     handleGenerateTTS: () => Promise<void>
     handleAnalyzeAssets: () => Promise<void>
     runStoryToScriptFlow: () => Promise<void>

@@ -39,6 +39,11 @@ function NovelPromotionWorkspaceContent(props: NovelPromotionWorkspaceProps) {
     scriptToStoryboardStream.isRunning ||
     scriptToStoryboardStream.isRecoveredRunning ||
     scriptToStoryboardStream.status === 'running'
+  const voiceAnalyzeStream = vm.execution.voiceAnalyzeStream
+  const voiceAnalyzeActive =
+    voiceAnalyzeStream.isRunning ||
+    voiceAnalyzeStream.isRecoveredRunning ||
+    voiceAnalyzeStream.status === 'running'
 
   const showStoryToScriptMinBadge =
     storyToScriptStream.isVisible &&
@@ -65,6 +70,19 @@ function NovelPromotionWorkspaceContent(props: NovelPromotionWorkspaceProps) {
       id: 'script-to-storyboard',
       label: tProgress('runConsole.scriptToStoryboardRunning'),
       onClick: () => vm.execution.setScriptToStoryboardConsoleMinimized(false),
+    })
+  }
+
+  const showVoiceAnalyzeMinBadge =
+    voiceAnalyzeStream.isVisible &&
+    voiceAnalyzeActive &&
+    vm.execution.voiceAnalyzeConsoleMinimized
+
+  if (showVoiceAnalyzeMinBadge) {
+    runBadges.push({
+      id: 'voice-analyze',
+      label: tProgress('runConsole.voiceAnalyzeRunning') || '正在分析台词...',
+      onClick: () => vm.execution.setVoiceAnalyzeConsoleMinimized(false),
     })
   }
 
@@ -159,10 +177,13 @@ function NovelPromotionWorkspaceContent(props: NovelPromotionWorkspaceProps) {
         <WorkspaceRunStreamConsoles
           storyToScriptStream={vm.execution.storyToScriptStream}
           scriptToStoryboardStream={vm.execution.scriptToStoryboardStream}
+          voiceAnalyzeStream={vm.execution.voiceAnalyzeStream}
           storyToScriptConsoleMinimized={vm.execution.storyToScriptConsoleMinimized}
           scriptToStoryboardConsoleMinimized={vm.execution.scriptToStoryboardConsoleMinimized}
+          voiceAnalyzeConsoleMinimized={vm.execution.voiceAnalyzeConsoleMinimized}
           onStoryToScriptMinimizedChange={vm.execution.setStoryToScriptConsoleMinimized}
           onScriptToStoryboardMinimizedChange={vm.execution.setScriptToStoryboardConsoleMinimized}
+          onVoiceAnalyzeMinimizedChange={vm.execution.setVoiceAnalyzeConsoleMinimized}
           hideMinimizedBadges={vm.execution.showCreatingToast}
         />
       </div>

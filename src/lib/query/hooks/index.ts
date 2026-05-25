@@ -208,6 +208,12 @@ export {
 } from './useScriptToStoryboardRunStream'
 
 export {
+    useVoiceAnalyzeRunStream,
+    type VoiceAnalyzeRunParams,
+    type VoiceAnalyzeRunResult,
+} from './useVoiceAnalyzeRunStream'
+
+export {
     useAssetTaskPresentation,
     useStoryboardTaskPresentation,
     useVideoTaskPresentation,

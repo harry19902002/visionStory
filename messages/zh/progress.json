@@ -124,6 +124,9 @@
     "scriptToStoryboardRunning": "Script→Storyboard 运行中",
     "storyToScriptSubtitle": "Story To Script V2",
     "scriptToStoryboardSubtitle": "Script To Storyboard V2",
+    "voiceAnalyze": "分析台词",
+    "voiceAnalyzeRunning": "分析台词运行中",
+    "voiceAnalyzeSubtitle": "Voice Analyze",
     "stop": "停止",
     "minimize": "最小化"
   },

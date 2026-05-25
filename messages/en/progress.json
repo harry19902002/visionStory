@@ -124,6 +124,9 @@
     "scriptToStoryboardRunning": "Script→Storyboard running",
     "storyToScriptSubtitle": "Story To Script V2",
     "scriptToStoryboardSubtitle": "Script To Storyboard V2",
+    "voiceAnalyze": "Analyze Voice Lines",
+    "voiceAnalyzeRunning": "Analyze Voice Lines Running",
+    "voiceAnalyzeSubtitle": "Voice Analyze",
     "stop": "Stop",
     "minimize": "Minimize"
   },

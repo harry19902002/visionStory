@@ -37,20 +37,26 @@ type RunStreamState = {
 interface WorkspaceRunStreamConsolesProps {
   storyToScriptStream: RunStreamState
   scriptToStoryboardStream: RunStreamState
+  voiceAnalyzeStream: RunStreamState
   storyToScriptConsoleMinimized: boolean
   scriptToStoryboardConsoleMinimized: boolean
+  voiceAnalyzeConsoleMinimized: boolean
   onStoryToScriptMinimizedChange: (next: boolean) => void
   onScriptToStoryboardMinimizedChange: (next: boolean) => void
+  onVoiceAnalyzeMinimizedChange: (next: boolean) => void
   hideMinimizedBadges?: boolean
 }
 
 export default function WorkspaceRunStreamConsoles({
   storyToScriptStream,
   scriptToStoryboardStream,
+  voiceAnalyzeStream,
   storyToScriptConsoleMinimized,
   scriptToStoryboardConsoleMinimized,
+  voiceAnalyzeConsoleMinimized,
   onStoryToScriptMinimizedChange,
   onScriptToStoryboardMinimizedChange,
+  onVoiceAnalyzeMinimizedChange,
   hideMinimizedBadges,
 }: WorkspaceRunStreamConsolesProps) {
   const t = useTranslations('progress')
@@ -62,6 +68,10 @@ export default function WorkspaceRunStreamConsoles({
     scriptToStoryboardStream.isRunning ||
     scriptToStoryboardStream.isRecoveredRunning ||
     scriptToStoryboardStream.status === 'running'
+  const voiceAnalyzeActive =
+    voiceAnalyzeStream.isRunning ||
+    voiceAnalyzeStream.isRecoveredRunning ||
+    voiceAnalyzeStream.status === 'running'
 
   const showStoryToScriptConsole =
     storyToScriptStream.isVisible &&
@@ -121,6 +131,36 @@ export default function WorkspaceRunStreamConsoles({
     scriptToStoryboardStream.isRunning &&
     scriptToStoryboardStream.selectedStep?.id === scriptToStoryboardStream.activeStepId &&
     scriptToStoryboardSelectedStage?.status === 'processing'
+
+  const showVoiceAnalyzeConsole =
+    voiceAnalyzeStream.isVisible &&
+    (voiceAnalyzeStream.stages.length > 0 || !!voiceAnalyzeStream.errorMessage || voiceAnalyzeActive)
+  const voiceAnalyzeFallbackStatus: LLMStageViewItem['status'] =
+    voiceAnalyzeStream.status === 'failed' ? 'failed' : 'processing'
+  const voiceAnalyzeStages: LLMStageViewItem[] = voiceAnalyzeStream.stages.length > 0
+    ? voiceAnalyzeStream.stages
+    : [{
+      id: 'voice_analyze',
+      title: t('runConsole.voiceAnalyze') || '分析台词',
+      status: voiceAnalyzeFallbackStatus,
+      progress: 0,
+      subtitle: voiceAnalyzeStream.errorMessage || undefined,
+    }]
+  const voiceAnalyzeActiveStage = voiceAnalyzeStream.activeStepId
+    ? voiceAnalyzeStages.find((stage: LLMStageViewItem) => stage.id === voiceAnalyzeStream.activeStepId) || null
+    : null
+  const voiceAnalyzeCardTitle =
+    voiceAnalyzeActiveStage?.title ||
+    t('runConsole.voiceAnalyze') || '分析台词'
+  const voiceAnalyzeSelectedStageId =
+    voiceAnalyzeStream.selectedStep?.id || voiceAnalyzeStream.activeStepId || null
+  const voiceAnalyzeSelectedStage = voiceAnalyzeSelectedStageId
+    ? voiceAnalyzeStages.find((stage: LLMStageViewItem) => stage.id === voiceAnalyzeSelectedStageId) || null
+    : null
+  const voiceAnalyzeShowCursor =
+    voiceAnalyzeStream.isRunning &&
+    voiceAnalyzeStream.selectedStep?.id === voiceAnalyzeStream.activeStepId &&
+    voiceAnalyzeSelectedStage?.status === 'processing'
 
   const handleRetryStepById = async (
     stream: RunStreamState,
@@ -232,6 +272,58 @@ export default function WorkspaceRunStreamConsoles({
                   <button
                     type="button"
                     onClick={() => onScriptToStoryboardMinimizedChange(true)}
+                    className="glass-btn-base glass-btn-secondary rounded-lg px-3 py-1.5 text-xs"
+                  >
+                    {t('runConsole.minimize')}
+                  </button>
+                </div>
+              )}
+            />
+          </div>
+        </div>
+      )}
+
+      {!hideMinimizedBadges && showVoiceAnalyzeConsole && voiceAnalyzeConsoleMinimized && voiceAnalyzeActive && (
+        <button
+          type="button"
+          onClick={() => onVoiceAnalyzeMinimizedChange(false)}
+          className="fixed right-6 bottom-36 z-120 glass-surface-modal rounded-2xl px-4 py-3 text-sm font-medium text-(--glass-tone-info-fg)"
+        >
+          {t('runConsole.voiceAnalyzeRunning') || '正在分析台词...'}
+        </button>
+      )}
+
+      {showVoiceAnalyzeConsole && !voiceAnalyzeConsoleMinimized && (
+        <div className="fixed inset-0 z-120 glass-overlay backdrop-blur-sm">
+          <div className="mx-auto mt-4 h-[calc(100vh-2rem)] w-[min(96vw,1400px)]">
+            <LLMStageStreamCard
+              title={voiceAnalyzeCardTitle}
+              subtitle={t('runConsole.voiceAnalyzeSubtitle') || 'AI 正在深度思考'}
+              stages={voiceAnalyzeStages}
+              activeStageId={voiceAnalyzeStream.activeStepId || voiceAnalyzeStages[voiceAnalyzeStages.length - 1]?.id || ''}
+              selectedStageId={voiceAnalyzeStream.selectedStep?.id || undefined}
+              onSelectStage={voiceAnalyzeStream.selectStep}
+              onRetryStage={(stepId) => {
+                void handleRetryStepById(voiceAnalyzeStream, stepId)
+              }}
+              outputText={voiceAnalyzeStream.outputText}
+              activeMessage={voiceAnalyzeStream.activeMessage}
+              overallProgress={voiceAnalyzeStream.overallProgress}
+              showCursor={voiceAnalyzeShowCursor}
+              autoScroll={voiceAnalyzeStream.selectedStep?.id === voiceAnalyzeStream.activeStepId}
+              errorMessage={voiceAnalyzeStream.errorMessage}
+              topRightAction={(
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={voiceAnalyzeStream.reset}
+                    className="glass-btn-base glass-btn-secondary rounded-lg px-3 py-1.5 text-xs"
+                  >
+                    {t('runConsole.stop')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onVoiceAnalyzeMinimizedChange(true)}
                     className="glass-btn-base glass-btn-secondary rounded-lg px-3 py-1.5 text-xs"
                   >
                     {t('runConsole.minimize')}

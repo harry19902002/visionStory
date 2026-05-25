@@ -97,8 +97,8 @@ export function useVoiceGenerationActions({
     setAnalyzing(true)
     try {
       await analyzeVoiceMutation.mutateAsync({ episodeId })
-      await loadData()
-      notifyVoiceLinesChanged()
+      // Task is now picked up by voiceAnalyzeStream in WorkspaceExecution.
+      // finalizeVoiceAnalyzeSuccess will call onRefresh() once completed.
     } catch (error: unknown) {
       if (shouldShowError(error)) {
         alert(`${t('errors.analyzeFailed')}: ${getErrorMessage(error)}`)
@@ -106,7 +106,7 @@ export function useVoiceGenerationActions({
     } finally {
       setAnalyzing(false)
     }
-  }, [analyzeVoiceMutation, episodeId, loadData, notifyVoiceLinesChanged, t])
+  }, [analyzeVoiceMutation, episodeId, t])
 
   const handleGenerateLine = useCallback(async (lineId: string) => {
     const pendingGeneration = buildPendingGenerationMap([lineId])

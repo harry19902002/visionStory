@@ -54,8 +54,15 @@ describe('WorkspaceRunStreamConsoles', () => {
         }),
         storyToScriptConsoleMinimized: false,
         scriptToStoryboardConsoleMinimized: true,
+        voiceAnalyzeConsoleMinimized: true,
         onStoryToScriptMinimizedChange: () => undefined,
         onScriptToStoryboardMinimizedChange: () => undefined,
+        onVoiceAnalyzeMinimizedChange: () => undefined,
+        voiceAnalyzeStream: createStreamState({
+          status: 'idle',
+          isVisible: false,
+          isRecoveredRunning: false,
+        }),
       }),
     )
 
