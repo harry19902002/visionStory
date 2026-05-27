@@ -29,6 +29,7 @@ export interface BuiltinPricingCatalogEntry {
 }
 
 interface PricingCatalogCache {
+  signature: string
   entries: BuiltinPricingCatalogEntry[]
   exact: Map<string, BuiltinPricingCatalogEntry>
   byModelId: Map<string, BuiltinPricingCatalogEntry[]>
@@ -171,6 +172,7 @@ function buildCache(entries: BuiltinPricingCatalogEntry[]): PricingCatalogCache 
   }
 
   return {
+    signature: '',
     entries,
     exact,
     byModelId,
@@ -181,17 +183,28 @@ function cloneEntry(entry: BuiltinPricingCatalogEntry): BuiltinPricingCatalogEnt
   return JSON.parse(JSON.stringify(entry)) as BuiltinPricingCatalogEntry
 }
 
-function loadPricingCatalog(): PricingCatalogCache {
-  if (cache) return cache
+function buildPricingCatalogSignature(files: string[]): string {
+  return files
+    .map((filePath) => {
+      const stat = fs.statSync(filePath)
+      return `${filePath}:${stat.mtimeMs}:${stat.size}`
+    })
+    .join('|')
+}
 
+function loadPricingCatalog(): PricingCatalogCache {
   const files = fs
     .readdirSync(PRICING_CATALOG_DIR, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
     .map((entry) => path.join(PRICING_CATALOG_DIR, entry.name))
+    .sort((left, right) => left.localeCompare(right))
 
   if (files.length === 0) {
     throw new Error(`PRICING_CATALOG_MISSING: no json file in ${PRICING_CATALOG_DIR}`)
   }
+
+  const signature = buildPricingCatalogSignature(files)
+  if (cache && cache.signature === signature) return cache
 
   const entries: BuiltinPricingCatalogEntry[] = []
   for (const filePath of files) {
@@ -207,6 +220,7 @@ function loadPricingCatalog(): PricingCatalogCache {
   }
 
   cache = buildCache(entries)
+  cache.signature = signature
   return cache
 }
 

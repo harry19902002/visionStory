@@ -397,7 +397,7 @@ export async function tryMarkTaskProcessing(taskId: string, externalId?: string 
       status: TASK_STATUS.PROCESSING,
       startedAt: new Date(),
       heartbeatAt: new Date(),
-      externalId: externalId || null,
+      ...(externalId !== undefined ? { externalId: externalId || null } : {}),
       attempt: { increment: 1 },
     },
   })

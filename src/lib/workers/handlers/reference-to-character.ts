@@ -4,9 +4,61 @@ import { prisma } from '@/lib/prisma'
 import { generateImage } from '@/lib/generator-api'
 import { queryFalStatus } from '@/lib/async-submit'
 import { fetchWithTimeoutAndRetry } from '@/lib/ark-api'
-import { getProviderConfig } from '@/lib/api-config'
+import { getProviderConfig, getModelsByType } from '@/lib/api-config'
 import { executeAiVisionStep } from '@/lib/ai-runtime'
 import { getUserModelConfig } from '@/lib/config-service'
+
+async function resolveVisionModel(userId: string, currentAnalysisModel: string | null): Promise<string> {
+  // If the current analysis model is a known vision model, use it
+  if (currentAnalysisModel) {
+    const lowerKey = currentAnalysisModel.toLowerCase()
+    if (
+      lowerKey.includes('gpt-4o') ||
+      lowerKey.includes('gemini') ||
+      lowerKey.includes('claude') ||
+      lowerKey.includes('gpt-4-vision') ||
+      lowerKey.includes('qwen-vl') ||
+      lowerKey.includes('deepseek-vl')
+    ) {
+      return currentAnalysisModel
+    }
+  }
+
+  // Otherwise, look for an enabled vision-capable model in the user's enabled LLMs
+  const llmModels = await getModelsByType(userId, 'llm')
+  const visionModel = llmModels.find((m) => {
+    const key = `${m.provider}::${m.modelId}`.toLowerCase()
+    return (
+      key.includes('gpt-4o') ||
+      key.includes('gemini') ||
+      key.includes('claude') ||
+      key.includes('gpt-4-vision') ||
+      key.includes('qwen-vl') ||
+      key.includes('deepseek-vl')
+    )
+  })
+
+  if (visionModel) {
+    return `${visionModel.provider}::${visionModel.modelId}`
+  }
+
+  // Fallback to apiyi::gpt-4o if apiyi provider is configured and has api key
+  const pref = await prisma.userPreference.findUnique({
+    where: { userId },
+    select: { customProviders: true },
+  })
+  const providers = JSON.parse(pref?.customProviders || '[]') as Array<{ id: string; apiKey?: string }>
+  const apiyiProvider = providers.find((p) => {
+    const key = p.id.split(':')[0].toLowerCase()
+    return key === 'apiyi'
+  })
+  if (apiyiProvider && apiyiProvider.apiKey) {
+    return 'apiyi::gpt-4o'
+  }
+
+  // Final fallback to the current analysis model
+  return currentAnalysisModel || 'apiyi::gpt-4o'
+}
 import {
   CHARACTER_IMAGE_BANANA_RATIO,
   addCharacterPromptSuffix,
@@ -168,6 +220,8 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
     throw new Error('请先在设置页面配置分析模型')
   }
 
+  const visionModel = await resolveVisionModel(job.data.userId, analysisModel)
+
   if (extractOnly) {
     await reportTaskProgress(job, 45, {
       stage: 'reference_to_character_extract',
@@ -176,7 +230,7 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
     })
     const completion = await executeAiVisionStep({
       userId: job.data.userId,
-      model: analysisModel,
+      model: visionModel,
       prompt: buildPrompt({
         promptId: PROMPT_IDS.CHARACTER_IMAGE_TO_DESCRIPTION,
         locale: job.data.locale,
@@ -234,14 +288,14 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
   ))
 
   let description: string | null = null
-  if (analysisModel) {
+  if (visionModel) {
     const analysisPrompt = buildPrompt({
       promptId: PROMPT_IDS.CHARACTER_IMAGE_TO_DESCRIPTION,
       locale: job.data.locale,
     })
     const completion = await executeAiVisionStep({
       userId: job.data.userId,
-      model: analysisModel,
+      model: visionModel,
       prompt: analysisPrompt,
       imageUrls: allReferenceImages,
       temperature: 0.3,

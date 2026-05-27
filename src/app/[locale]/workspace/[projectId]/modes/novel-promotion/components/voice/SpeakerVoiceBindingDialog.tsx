@@ -18,8 +18,7 @@ interface SpeakerVoiceBindingDialogProps {
     isOpen: boolean
     speaker: string
     projectId: string
-    episodeId: string
-    initialSpeakerVoice?: any // using any or SpeakerVoiceEntry if imported
+    initialSpeakerVoice?: { provider?: string, voiceId?: string, speed?: number, pitch?: number, vol?: number, [key: string]: unknown }
     onClose: () => void
     onBound: (speaker: string, binding: InlineSpeakerVoiceBinding) => void
 }
@@ -33,7 +32,6 @@ export default function SpeakerVoiceBindingDialog({
     isOpen,
     speaker,
     projectId,
-    episodeId,
     initialSpeakerVoice,
     onClose,
     onBound,
@@ -47,13 +45,6 @@ export default function SpeakerVoiceBindingDialog({
     const { data: userPref } = useUserPreferences()
     const audioModel = project?.novelPromotionData?.audioModel || userPref?.audioModel || ''
     const isMinimax = audioModel.toLowerCase().includes('minimax')
-
-    const [advancedVoice, setAdvancedVoice] = useState<{
-        id: string
-        customVoiceUrl: string | null
-        voiceId: string | null
-        voiceType: string
-    } | null>(null)
     const [speed, setSpeed] = useState<number>(1.0)
     const [pitch, setPitch] = useState<number>(0)
     const [vol, setVol] = useState<number>(1.0)
@@ -79,7 +70,6 @@ export default function SpeakerVoiceBindingDialog({
     const handleClose = useCallback(() => {
         setActiveTab('select')
         setSubDialogOpen(false)
-        setAdvancedVoice(null)
         onClose()
     }, [onClose])
 
@@ -94,7 +84,6 @@ export default function SpeakerVoiceBindingDialog({
         voiceType: string
     }) => {
         if (isMinimax && voice.voiceId) {
-            setAdvancedVoice(voice)
             setSubDialogOpen(false)
             return
         }

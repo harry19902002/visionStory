@@ -6,7 +6,7 @@ import type { LipSyncParams } from '@/lib/lipsync/types'
 
 const LIPSYNC_MIN_AUDIO_DURATION_MS = 2000
 
-export type LipSyncProviderKey = 'fal' | 'vidu' | 'bailian'
+export type LipSyncProviderKey = 'fal' | 'vidu' | 'bailian' | 'seetacloud'
 
 interface LoadedBinary {
   buffer: Buffer
@@ -328,6 +328,20 @@ export async function preprocessLipSyncParams(
   params: LipSyncParams,
   context: LipSyncPreprocessContext,
 ): Promise<LipSyncPreprocessResult> {
+  if (context.providerKey === 'seetacloud') {
+    const audioBinary = await loadBinaryFromInput(params.audioUrl)
+    const mimeType = audioBinary.mimeType || 'audio/mpeg'
+    const providerAudioInput = `data:${mimeType};base64,${audioBinary.buffer.toString('base64')}`
+    return {
+      params: {
+        ...params,
+        audioUrl: providerAudioInput,
+      },
+      paddedAudio: false,
+      trimmedAudio: false,
+    }
+  }
+
   const inputAudioDurationMs = normalizeDurationMs(params.audioDurationMs)
   const videoDurationMs = await resolveVideoDurationMs(params)
   let audioDurationMs = inputAudioDurationMs

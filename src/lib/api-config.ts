@@ -68,9 +68,12 @@ function normalizeProviderBaseUrl(providerId: string, rawBaseUrl?: string): stri
   const baseUrl = readTrimmedString(rawBaseUrl)
   if (!baseUrl) {
     if (providerKey === 'zealman') return 'https://uu316886-77936903aee0.westd.seetacloud.com:8443'
-    if (providerKey === 'apiyi') return 'https://api.apiyi.com/v1beta'
+    if (providerKey === 'apiyi') return 'https://api.apiyi.com/v1'
     if (providerKey === 'openrouter') return 'https://openrouter.ai/api/v1'
     return undefined
+  }
+  if (providerKey === 'apiyi' && baseUrl.includes('/v1beta')) {
+    return baseUrl.replace('/v1beta', '/v1')
   }
   if (providerKey !== 'openai-compatible') return baseUrl
 
@@ -331,6 +334,17 @@ export async function resolveModelSelection(
   mediaType: ModelMediaType,
 ): Promise<ModelSelection> {
   const parsed = assertModelKey(model, `${mediaType} model`)
+
+  // Bypass config check for default SeetaCloud lip-sync model
+  if (mediaType === 'lipsync' && parsed.modelKey === 'seetacloud::InfiniteTalk') {
+    return {
+      provider: parsed.provider,
+      modelId: parsed.modelId,
+      modelKey: parsed.modelKey,
+      mediaType,
+    }
+  }
+
   const models = await getModelsByType(userId, mediaType)
 
   const exact = findModelByKey(models, parsed.modelKey)
@@ -396,6 +410,12 @@ export async function resolveModelSelectionOrSingle(
   mediaType: ModelMediaType,
 ): Promise<ModelSelection> {
   const modelKey = readTrimmedString(model)
+
+  // Bypass config check for default SeetaCloud lip-sync model
+  if (mediaType === 'lipsync' && modelKey === 'seetacloud::InfiniteTalk') {
+    return resolveModelSelection(userId, modelKey, mediaType)
+  }
+
   if (!modelKey) {
     return await resolveSingleModelSelection(userId, mediaType)
   }

@@ -4,6 +4,8 @@ import { getArtStylePrompt } from '@/lib/constants'
 import { createScopedLogger } from '@/lib/logging/core'
 import { type TaskJobData } from '@/lib/task/types'
 import { reportTaskProgress } from '../shared'
+import { executeAiTextStep } from '@/lib/ai-runtime'
+import { resolveAnalysisModel } from './resolve-analysis-model'
 import {
   assertTaskActive,
   getProjectModels,
@@ -138,7 +140,7 @@ function buildPanelPromptContext(params: {
   }
 }
 
-function buildPanelPrompt(params: {
+function buildExpansionPrompt(params: {
   locale: TaskJobData['locale']
   aspectRatio: string
   styleText: string
@@ -146,12 +148,29 @@ function buildPanelPrompt(params: {
   contextJson: string
 }) {
   return buildPrompt({
+    promptId: PROMPT_IDS.NP_IMAGE_PROMPT_EXPANSION,
+    locale: params.locale,
+    variables: {
+      storyboard_text_json_input: params.contextJson,
+      source_text: params.sourceText || '无',
+      style: params.styleText,
+    },
+  })
+}
+
+function buildFinalImagePrompt(params: {
+  locale: TaskJobData['locale']
+  aspectRatio: string
+  styleText: string
+  expandedPrompt: string
+}) {
+  return buildPrompt({
     promptId: PROMPT_IDS.NP_SINGLE_PANEL_IMAGE,
     locale: params.locale,
     variables: {
       aspect_ratio: params.aspectRatio,
-      storyboard_text_json_input: params.contextJson,
-      source_text: params.sourceText || '无',
+      storyboard_text_json_input: params.expandedPrompt, // NP_SINGLE_PANEL_IMAGE now treats this as the narrative input
+      source_text: 'Expanded Visual Description (No Text)',
       style: params.styleText,
     },
   })
@@ -221,17 +240,59 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
     projectData,
   })
   const contextJson = JSON.stringify(promptContext, null, 2)
-  const prompt = buildPanelPrompt({
+  const expansionPrompt = buildExpansionPrompt({
     locale: job.data.locale,
     aspectRatio,
     styleText: artStyle || '与参考图风格一致',
     sourceText: panel.srtSegment || panel.description || '',
     contextJson,
   })
+
+  // 1. Resolve analysis model for prompt expansion
+  const analysisModel = await resolveAnalysisModel({
+    userId: job.data.userId,
+    projectAnalysisModel: projectData.analysisModel,
+  })
+
+  // 2. Execute AI Text Step to expand the prompt
+  logger.info({ message: 'expanding image prompt using LLM' })
+  await reportTaskProgress(job, 15, { stage: 'expand_image_prompt' })
+  const expansionOutput = await executeAiTextStep({
+    userId: job.data.userId,
+    model: analysisModel,
+    messages: [{ role: 'user', content: expansionPrompt }],
+    projectId: job.data.projectId,
+    action: 'expand_image_prompt',
+    temperature: 0.7,
+    meta: {
+      stepId: `expand_${panel.id}`,
+      stepTitle: 'progress.streamStep.expandImagePrompt',
+      stepIndex: 1,
+      stepTotal: 1,
+    },
+  })
+
+  const expandedPromptText = expansionOutput.text.trim()
   logger.info({
-    message: 'panel image prompt resolved',
+    message: 'panel image prompt expanded successfully',
     details: {
-      promptLength: prompt.length,
+      expandedPromptLength: expandedPromptText.length,
+      sample: expandedPromptText.substring(0, 100),
+    },
+  })
+
+  // 3. Build final image generator prompt
+  const finalPrompt = buildFinalImagePrompt({
+    locale: job.data.locale,
+    aspectRatio,
+    styleText: artStyle || '与参考图风格一致',
+    expandedPrompt: expandedPromptText,
+  })
+
+  logger.info({
+    message: 'final panel image prompt resolved',
+    details: {
+      promptLength: finalPrompt.length,
     },
   })
 
@@ -246,7 +307,7 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
     const source = await resolveImageSourceFromGeneration(job, {
       userId: job.data.userId,
       modelId: modelKey,
-      prompt,
+      prompt: finalPrompt,
       options: {
         referenceImages: normalizedRefs,
         aspectRatio,

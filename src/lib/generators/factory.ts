@@ -31,6 +31,7 @@ import {
     SiliconFlowImageGenerator,
     SiliconFlowVideoGenerator,
 } from './official'
+import { MinimaxTTSGenerator } from './audio/minimax'
 
 /**
  * 根据 provider 创建图片生成器
@@ -118,7 +119,6 @@ export function createAudioGenerator(provider: string): AudioGenerator {
         case 'siliconflow':
             return new SiliconFlowAudioGenerator()
         case 'minimax':
-            const { MinimaxTTSGenerator } = require('./audio/minimax')
             return new MinimaxTTSGenerator()
         default:
             throw new Error(`Unknown audio generator provider: ${provider}`)

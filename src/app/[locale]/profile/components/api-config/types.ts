@@ -99,6 +99,7 @@ export const PRESET_MODELS: PresetModel[] = [
     { modelId: 'anthropic/claude-sonnet-4', name: 'Claude Sonnet 4', type: 'llm', provider: 'openrouter' },
     { modelId: 'openai/gpt-5.4', name: 'GPT-5.4', type: 'llm', provider: 'openrouter' },
     { modelId: 'google/gemini-3.1-flash-lite-preview', name: 'Gemini 3.1 Flash Lite', type: 'llm', provider: 'openrouter' },
+    { modelId: 'gpt-4o', name: 'GPT-4o', type: 'llm', provider: 'apiyi' },
     // Google AI Studio 文本模型
     { modelId: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro', type: 'llm', provider: 'google' },
     { modelId: 'gemini-3-flash-preview', name: 'Gemini 3 Flash', type: 'llm', provider: 'google' },
@@ -216,7 +217,7 @@ export const PRESET_PROVIDERS: Omit<Provider, 'apiKey' | 'hasApiKey'>[] = [
     { id: 'minimax', name: 'MiniMax Hailuo', baseUrl: 'https://api.minimaxi.com/v1' },
     { id: 'vidu', name: 'Vidu' },
     { id: 'fal', name: 'FAL' },
-    { id: 'apiyi', name: 'APIYI', baseUrl: 'https://api.apiyi.com/v1beta' },
+    { id: 'apiyi', name: 'APIYI', baseUrl: 'https://api.apiyi.com/v1' },
     { id: 'zealman', name: 'Zealman', baseUrl: 'https://uu316886-77936903aee0.westd.seetacloud.com:8443', noApiKey: true },
 ]
 

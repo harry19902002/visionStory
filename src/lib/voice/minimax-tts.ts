@@ -16,7 +16,7 @@ export async function synthesizeWithMinimaxTTS(params: MinimaxVoiceParams): Prom
 
     const url = 'https://api.minimaxi.com/v1/t2a_v2'
 
-    const voice_setting: any = {
+    const voice_setting: Record<string, unknown> = {
         voice_id: voiceId,
         speed,
         vol,

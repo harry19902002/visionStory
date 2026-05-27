@@ -5,7 +5,7 @@ describe('api-config apiyi preset', () => {
   it('uses APIYI baseUrl in preset provider', () => {
     const apiyiProvider = PRESET_PROVIDERS.find((provider) => provider.id === 'apiyi')
     expect(apiyiProvider).toBeDefined()
-    expect(apiyiProvider?.baseUrl).toBe('https://api.apiyi.com/v1beta')
+    expect(apiyiProvider?.baseUrl).toBe('https://api.apiyi.com/v1')
   })
 
   it('includes all required apiyi preset models', () => {
@@ -15,5 +15,10 @@ describe('api-config apiyi preset', () => {
 
     expect(apiyiImageModelIds).toContain('gemini-3.1-flash-image-preview')
     expect(apiyiImageModelIds).toContain('gemini-3-pro-image-preview')
+
+    const apiyiLlmModelIds = PRESET_MODELS
+      .filter((model) => model.provider === 'apiyi' && model.type === 'llm')
+      .map((model) => model.modelId)
+    expect(apiyiLlmModelIds).toContain('gpt-4o')
   })
 })

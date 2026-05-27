@@ -55,6 +55,7 @@ export async function submitGeminiBatch(
     referenceImages?: string[]
     aspectRatio?: string
     resolution?: string
+    temperature?: number
   }
 ): Promise<{
   success: boolean
@@ -129,6 +130,7 @@ export async function submitGeminiBatch(
         contents: [{ parts: contentParts }],
         config: {
           responseModalities: ['TEXT', 'IMAGE'],  // 🔥 必须指定包含 IMAGE
+          ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
           ...(Object.keys(imageConfig).length > 0 && { imageConfig })  // 🔥 添加图片配置
         }
       }

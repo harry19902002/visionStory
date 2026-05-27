@@ -43,6 +43,7 @@ interface NovelProjectData {
   videoRatio?: string | null
   characters?: CharacterLike[]
   locations?: LocationLike[]
+  analysisModel?: string | null
 }
 
 interface PanelLike {

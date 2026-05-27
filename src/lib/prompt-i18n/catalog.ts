@@ -110,6 +110,10 @@ export const PROMPT_CATALOG: Record<PromptId, PromptCatalogEntry> = {
     pathStem: 'novel-promotion/image_prompt_modify',
     variableKeys: ['prompt_input', 'user_input', 'video_prompt_input'],
   },
+  [PROMPT_IDS.NP_IMAGE_PROMPT_EXPANSION]: {
+    pathStem: 'novel-promotion/image_prompt_expansion',
+    variableKeys: ['style', 'storyboard_text_json_input', 'source_text'],
+  },
   [PROMPT_IDS.NP_LOCATION_CREATE]: {
     pathStem: 'novel-promotion/location_create',
     variableKeys: ['user_input'],

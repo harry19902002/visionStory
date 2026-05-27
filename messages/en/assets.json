@@ -191,7 +191,12 @@
         "introduction": "Character Introduction",
         "introductionPlaceholder": "e.g.: The protagonist; 'I' refers to her. Others call her 'Snow' or 'Sister Snow'...",
         "introductionTip": "Describe the character's role in the story, narrative perspective (who 'I' refers to), how others address them",
-        "saveIntroduction": "Save Introduction"
+        "saveIntroduction": "Save Introduction",
+        "reversePrompt": "Reverse Prompt",
+        "reversePromptTip": "Upload a local image to reverse-engineer the character description",
+        "reverseFailed": "Reverse prompt failed",
+        "uploading": "Uploading...",
+        "reversing": "Reversing..."
     },
     "toolbar": {
         "filter": "Filter",

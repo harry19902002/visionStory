@@ -37,14 +37,14 @@ export function usePanelLipSync({
   }, [onLipSync, panel.panelId, panel.panelIndex, panel.storyboardId])
 
   const handleStartLipSync = useCallback(() => {
-    if (!panel.videoUrl || matchedVoiceLines.length === 0) return
+    if ((!panel.videoUrl && !panel.imageUrl) || matchedVoiceLines.length === 0) return
     if (matchedVoiceLines.length === 1) {
       void executeLipSync(matchedVoiceLines[0])
       return
     }
     setShowLipSyncPanel(true)
     setLipSyncError(null)
-  }, [executeLipSync, matchedVoiceLines, panel.videoUrl])
+  }, [executeLipSync, matchedVoiceLines, panel.videoUrl, panel.imageUrl])
 
   return {
     showLipSyncPanel,

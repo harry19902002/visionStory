@@ -16,6 +16,7 @@ interface VideoRenderPanelProps {
   projectId: string
   episodeId: string
   runningVoiceLineIds: Set<string>
+  failedVoiceLineIds: Set<string>
   panelVoiceLines: Map<string, MatchedVoiceLine[]>
   panelVideoPreference: Map<string, boolean>
   savingPrompts: Set<string>
@@ -83,6 +84,7 @@ export default function VideoRenderPanel({
   projectId,
   episodeId,
   runningVoiceLineIds,
+  failedVoiceLineIds,
   panelVoiceLines,
   panelVideoPreference,
   savingPrompts,
@@ -156,6 +158,7 @@ export default function VideoRenderPanel({
                 projectId={projectId}
                 episodeId={episodeId}
                 runningVoiceLineIds={runningVoiceLineIds}
+                failedVoiceLineIds={failedVoiceLineIds}
                 matchedVoiceLines={panelVoiceLines.get(panelKey) || []}
                 onLipSync={onLipSync}
                 showLipSyncVideo={panelVideoPreference.get(panelKey) ?? true}

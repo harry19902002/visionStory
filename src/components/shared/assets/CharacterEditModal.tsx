@@ -14,6 +14,10 @@ import {
     useUpdateProjectAppearanceDescription,
     useUpdateProjectCharacterIntroduction,
     useUpdateProjectCharacterName,
+    useUploadProjectTempMedia,
+    useExtractProjectReferenceCharacterDescription,
+    useUploadAssetHubTempMedia,
+    useExtractAssetHubReferenceCharacterDescription,
 } from '@/lib/query/hooks'
 import { AiModifyDescriptionField } from './AiModifyDescriptionField'
 
@@ -68,6 +72,8 @@ export function CharacterEditModal({
     const [aiModifyInstruction, setAiModifyInstruction] = useState('')
     const [isAiModifying, setIsAiModifying] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
+    const [isReversing, setIsReversing] = useState(false)
+
     const aiModifyingState = isAiModifying
         ? resolveTaskPresentationState({
             phase: 'processing',
@@ -101,9 +107,39 @@ export function CharacterEditModal({
     const aiModifyAssetHub = useAiModifyCharacterDescription()
     const aiModifyProject = useAiModifyProjectAppearanceDescription(projectId ?? '')
 
+    const uploadAssetHubTemp = useUploadAssetHubTempMedia()
+    const uploadProjectTemp = useUploadProjectTempMedia()
+    const extractAssetHubDescription = useExtractAssetHubReferenceCharacterDescription()
+    const extractProjectDescription = useExtractProjectReferenceCharacterDescription(projectId ?? '')
+
     const getErrorMessage = (error: unknown, fallback: string) => {
         if (error instanceof Error && error.message) return error.message
         return fallback
+    }
+
+    const handleReversePrompt = async (base64: string) => {
+        try {
+            setIsReversing(true)
+            const uploadMutation = mode === 'asset-hub' ? uploadAssetHubTemp : uploadProjectTemp
+            const extractMutation = mode === 'asset-hub' ? extractAssetHubDescription : extractProjectDescription
+
+            const data = await uploadMutation.mutateAsync({ imageBase64: base64 })
+            if (!data.url) throw new Error(t('modal.reverseFailed'))
+
+            const result = await extractMutation.mutateAsync([data.url])
+            if (result?.description) {
+                setEditingDescription(result.description)
+                onUpdate?.(result.description)
+            } else {
+                throw new Error('No description returned')
+            }
+        } catch (error: unknown) {
+            if (shouldShowError(error)) {
+                alert(getErrorMessage(error, t('modal.reverseFailed')))
+            }
+        } finally {
+            setIsReversing(false)
+        }
     }
 
     const persistNameIfNeeded = async () => {
@@ -332,6 +368,9 @@ export function CharacterEditModal({
                         aiModifyingState={aiModifyingState}
                         actionLabel={t('modal.modifyDescription')}
                         cancelLabel={t('common.cancel')}
+                        onReversePrompt={handleReversePrompt}
+                        isReversing={isReversing}
+                        reverseLabel={isReversing ? t('modal.reversing') : t('modal.reversePrompt')}
                     />
                 </div>
 

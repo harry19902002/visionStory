@@ -10,6 +10,7 @@ export interface LipSyncParams {
   audioUrl: string
   audioDurationMs?: number | null
   videoDurationMs?: number | null
+  videoPrompt?: string | null
 }
 
 export interface LipSyncSubmitContext {

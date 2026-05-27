@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { AppIcon } from '@/components/ui/icons'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import type { TaskPresentationState } from '@/lib/task/presentation'
@@ -20,6 +20,9 @@ interface AiModifyDescriptionFieldProps {
   aiModifyingState: TaskPresentationState | null
   actionLabel: string
   cancelLabel: string
+  onReversePrompt?: (base64: string) => Promise<void> | void
+  isReversing?: boolean
+  reverseLabel?: string
 }
 
 export function AiModifyDescriptionField({
@@ -36,8 +39,12 @@ export function AiModifyDescriptionField({
   aiModifyingState,
   actionLabel,
   cancelLabel,
+  onReversePrompt,
+  isReversing = false,
+  reverseLabel,
 }: AiModifyDescriptionFieldProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleCloseModal = useCallback(() => {
     if (isAiModifying) return
@@ -62,13 +69,59 @@ export function AiModifyDescriptionField({
           onChange={(event) => onDescriptionChange(event.target.value)}
           className={`app-scrollbar w-full resize-none border-0 bg-transparent px-4 py-3 pb-16 text-sm leading-6 text-[var(--glass-text-primary)] outline-none placeholder:text-[var(--glass-text-tertiary)] ${descriptionHeightClassName}`}
           placeholder={descriptionPlaceholder}
-          disabled={isAiModifying}
+          disabled={isAiModifying || isReversing}
         />
-        <div className="pointer-events-none absolute bottom-4 right-4">
+        <div className="pointer-events-none absolute bottom-4 right-4 flex items-center gap-2">
+          {onReversePrompt && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={isAiModifying || isReversing}
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  const reader = new FileReader()
+                  reader.onload = async (event) => {
+                    const base64 = event.target?.result as string
+                    if (onReversePrompt) {
+                      await Promise.resolve(onReversePrompt(base64))
+                    }
+                  }
+                  reader.readAsDataURL(file)
+                  e.target.value = ''
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isAiModifying || isReversing}
+                className="glass-btn-base pointer-events-auto flex h-10 flex-shrink-0 items-center gap-1.5 border border-[var(--glass-stroke-strong)] bg-[var(--glass-bg-surface)] px-3 text-sm transition-all hover:border-[var(--glass-tone-info-fg)]/40 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isReversing ? (
+                  <>
+                    <AppIcon name="loader" className="h-4 w-4 animate-spin text-[var(--glass-text-secondary)]" />
+                    <span className="font-medium text-[var(--glass-text-secondary)]">
+                      {reverseLabel || '反推中...'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <AppIcon name="imageEdit" className="h-4 w-4 text-[#3b82f6]" />
+                    <span className="font-medium text-[var(--glass-text-secondary)]">
+                      {reverseLabel || '反推提示词'}
+                    </span>
+                  </>
+                )}
+              </button>
+            </>
+          )}
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            disabled={isAiModifying}
+            disabled={isAiModifying || isReversing}
             className="glass-btn-base pointer-events-auto flex h-10 flex-shrink-0 items-center gap-1.5 border border-[var(--glass-stroke-strong)] bg-[var(--glass-bg-surface)] px-3 text-sm transition-all hover:border-[var(--glass-tone-info-fg)]/40 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isAiModifying ? (

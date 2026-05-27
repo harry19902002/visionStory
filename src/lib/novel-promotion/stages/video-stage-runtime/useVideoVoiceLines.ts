@@ -75,6 +75,17 @@ export function useVideoVoiceLines({
     return ids
   }, [voiceLineStates, voiceLineTargets])
 
+  const failedVoiceLineIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const target of voiceLineTargets) {
+      const state = voiceLineStates.getTaskState(target.key)
+      if (state?.phase === 'failed') {
+        ids.add(target.targetId)
+      }
+    }
+    return ids
+  }, [voiceLineStates, voiceLineTargets])
+
   const reloadVoiceLines = useCallback(async () => {
     try {
       await matchedVoiceLinesQuery.refetch()
@@ -87,6 +98,7 @@ export function useVideoVoiceLines({
     panelVoiceLines,
     allVoiceLines,
     runningVoiceLineIds,
+    failedVoiceLineIds,
     reloadVoiceLines,
   }
 }

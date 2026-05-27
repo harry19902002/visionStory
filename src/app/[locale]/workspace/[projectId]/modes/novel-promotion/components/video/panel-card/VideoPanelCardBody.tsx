@@ -240,39 +240,46 @@ export default function VideoPanelCardBody({ runtime }: VideoPanelCardBodyProps)
                             : null
 
                           return (
-                            <div key={voiceLine.id} className="flex items-start gap-1.5 p-1.5 bg-[var(--glass-bg-muted)] rounded text-[10px]">
-                              {voiceLine.audioUrl ? (
-                                <button
-                                  onClick={(event) => {
-                                    event.stopPropagation()
-                                    voiceManager.handlePlayVoiceLine(voiceLine)
-                                  }}
-                                  className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors bg-[var(--glass-bg-muted)]"
-                                  title={voiceManager.playingVoiceLineId === voiceLine.id ? t('panelCard.stopVoice') : t('panelCard.play')}
-                                >
-                                  <AppIcon name="play" className="w-3 h-3" />
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={(event) => {
-                                    event.stopPropagation()
-                                    void voiceManager.handleGenerateAudio(voiceLine)
-                                  }}
-                                  disabled={isVoiceTaskRunning}
-                                  className="flex-shrink-0 px-1.5 py-0.5 bg-[var(--glass-accent-from)] text-white rounded disabled:opacity-50"
-                                  title={t('panelCard.generateAudio')}
-                                >
-                                  {isVoiceTaskRunning ? (
-                                    <TaskStatusInline state={voiceAudioRunningState} className="text-white [&>span]:text-white [&_svg]:text-white" />
-                                  ) : (
-                                    tCommon('generate')
-                                  )}
-                                </button>
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <span className="text-[var(--glass-text-tertiary)]">{voiceLine.speaker}: </span>
-                                <span className="text-[var(--glass-text-secondary)]">&ldquo;{voiceLine.content}&rdquo;</span>
+                            <div key={voiceLine.id}>
+                              <div className="flex items-start gap-1.5 p-1.5 bg-[var(--glass-bg-muted)] rounded text-[10px]">
+                                {voiceLine.audioUrl ? (
+                                  <button
+                                    onClick={(event) => {
+                                      event.stopPropagation()
+                                      voiceManager.handlePlayVoiceLine(voiceLine)
+                                    }}
+                                    className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors bg-[var(--glass-bg-muted)]"
+                                    title={voiceManager.playingVoiceLineId === voiceLine.id ? t('panelCard.stopVoice') : t('panelCard.play')}
+                                  >
+                                    <AppIcon name="play" className="w-3 h-3" />
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={(event) => {
+                                      event.stopPropagation()
+                                      void voiceManager.handleGenerateAudio(voiceLine)
+                                    }}
+                                    disabled={isVoiceTaskRunning}
+                                    className="flex-shrink-0 px-1.5 py-0.5 bg-[var(--glass-accent-from)] text-white rounded disabled:opacity-50"
+                                    title={t('panelCard.generateAudio')}
+                                  >
+                                    {isVoiceTaskRunning ? (
+                                      <TaskStatusInline state={voiceAudioRunningState} className="text-white [&>span]:text-white [&_svg]:text-white" />
+                                    ) : (
+                                      tCommon('generate')
+                                    )}
+                                  </button>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-[var(--glass-text-tertiary)]">{voiceLine.speaker}: </span>
+                                  <span className="text-[var(--glass-text-secondary)]">&ldquo;{voiceLine.content}&rdquo;</span>
+                                </div>
                               </div>
+                              {voiceLine.errorMessage && (
+                                <div className="ml-[26px] mt-1 text-[10px] text-[var(--glass-tone-danger-fg)]">
+                                  {voiceLine.errorMessage}
+                                </div>
+                              )}
                             </div>
                           )
                         })}

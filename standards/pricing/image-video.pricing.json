@@ -6063,5 +6063,23 @@
       "mode": "flat",
       "flatAmount": 0.5
     }
+  },
+  {
+    "apiType": "lip-sync",
+    "provider": "seetacloud",
+    "modelId": "LTX2.3mouthpiece",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.5
+    }
+  },
+  {
+    "apiType": "lip-sync",
+    "provider": "seetacloud",
+    "modelId": "InfiniteTalk",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.5
+    }
   }
 ]

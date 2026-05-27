@@ -20,6 +20,7 @@ export function useVideoPanelActions({
   projectId,
   episodeId,
   runningVoiceLineIds = EMPTY_RUNNING_VOICE_LINE_IDS,
+  failedVoiceLineIds = EMPTY_RUNNING_VOICE_LINE_IDS,
   matchedVoiceLines = [],
   onLipSync,
   showLipSyncVideo,
@@ -93,6 +94,7 @@ export function useVideoPanelActions({
     episodeId,
     matchedVoiceLines,
     runningVoiceLineIds,
+    failedVoiceLineIds,
     audioFailedMessage: t('panelCard.error.audioFailed'),
   })
 
@@ -103,7 +105,7 @@ export function useVideoPanelActions({
   })
 
   const showLipSyncSection = voiceManager.hasMatchedVoiceLines
-  const canLipSync = hasVisibleBaseVideo && voiceManager.hasMatchedAudio && !taskStatus.isLipSyncTaskRunning
+  const canLipSync = (hasVisibleBaseVideo || !!panel.imageUrl) && voiceManager.hasMatchedAudio && !taskStatus.isLipSyncTaskRunning
 
   return {
     t,

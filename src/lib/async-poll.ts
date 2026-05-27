@@ -48,7 +48,7 @@ function getErrorMessage(error: unknown): string {
  * 解析 externalId 获取 provider、type 和请求信息
  */
 export function parseExternalId(externalId: string): {
-    provider: 'FAL' | 'ARK' | 'GEMINI' | 'GOOGLE' | 'MINIMAX' | 'VIDU' | 'OPENAI' | 'OCOMPAT' | 'BAILIAN' | 'SILICONFLOW' | 'ZEALMAN' | 'UNKNOWN'
+    provider: 'FAL' | 'ARK' | 'GEMINI' | 'GOOGLE' | 'MINIMAX' | 'VIDU' | 'OPENAI' | 'OCOMPAT' | 'BAILIAN' | 'SILICONFLOW' | 'ZEALMAN' | 'SEETACLOUD' | 'UNKNOWN'
     type: 'VIDEO' | 'IMAGE' | 'BATCH' | 'UNKNOWN'
     endpoint?: string
     requestId: string
@@ -224,9 +224,23 @@ export function parseExternalId(externalId: string): {
         }
     }
 
+    if (externalId.startsWith('SEETACLOUD:')) {
+        const parts = externalId.split(':')
+        const type = parts[1]
+        const requestId = parts.slice(2).join(':')
+        if (type !== 'VIDEO' || !requestId) {
+            throw new Error(`无效 SEETACLOUD externalId: "${externalId}"，应为 SEETACLOUD:VIDEO:promptId`)
+        }
+        return {
+            provider: 'SEETACLOUD',
+            type: 'VIDEO',
+            requestId,
+        }
+    }
+
     throw new Error(
         `无法识别的 externalId 格式: "${externalId}". ` +
-        `支持的格式: FAL:TYPE:endpoint:requestId, ARK:TYPE:requestId, GEMINI:BATCH:batchName, GOOGLE:VIDEO:operationName, MINIMAX:TYPE:taskId, VIDU:TYPE:taskId, OPENAI:VIDEO:providerToken:videoId, OCOMPAT:TYPE:providerToken:modelKeyToken:taskId, BAILIAN:TYPE:requestId, SILICONFLOW:TYPE:requestId, ZEALMAN:VIDEO:promptId`
+        `支持的格式: FAL:TYPE:endpoint:requestId, ARK:TYPE:requestId, GEMINI:BATCH:batchName, GOOGLE:VIDEO:operationName, MINIMAX:TYPE:taskId, VIDU:TYPE:taskId, OPENAI:VIDEO:providerToken:videoId, OCOMPAT:TYPE:providerToken:modelKeyToken:taskId, BAILIAN:TYPE:requestId, SILICONFLOW:TYPE:requestId, ZEALMAN:VIDEO:promptId, SEETACLOUD:VIDEO:promptId`
     )
 }
 
@@ -268,6 +282,8 @@ export async function pollAsyncTask(
             return await pollSiliconFlowTask(parsed.requestId)
         case 'ZEALMAN':
             return await pollZealmanTask(parsed.requestId, userId)
+        case 'SEETACLOUD':
+            return await pollSeetaCloudTask(parsed.requestId)
         default:
             // 🔥 移除 fallback：未知 provider 直接抛出错误
             throw new Error(`未知的 Provider: ${parsed.provider}`)
@@ -659,11 +675,80 @@ async function pollZealmanTask(
         _ulogError(`${logPrefix} prompt_id=${promptId} 异常:`, error)
         return {
             status: 'failed',
-            error: errorMessage
+            error: `查询失败: ${errorMessage}`
         }
     }
 }
 
+async function pollSeetaCloudTask(promptId: string): Promise<PollResult> {
+    const logPrefix = '[SeetaCloud Query]'
+    try {
+        const url = `https://uu316886-77936903aee0.westd.seetacloud.com:8443/api/workflow/result?prompt_id=${encodeURIComponent(promptId)}`
+        const response = await fetch(url)
+
+        if (!response.ok) {
+            const errorText = await response.text()
+            _ulogError(`${logPrefix} 查询失败:`, response.status, errorText)
+            return {
+                status: 'failed',
+                error: `查询失败: ${response.status}`
+            }
+        }
+
+        const data = await response.json()
+
+        if (data.pending === true || data.status === 1 || data.status === 2) {
+            return { status: 'pending' }
+        }
+
+        if (data.success === false || data.error || data.status === 4) {
+            return {
+                status: 'failed',
+                error: data.error || '任务执行失败'
+            }
+        }
+
+        if (data.success === true || data.status === 3 || data.data || data.results) {
+            let videoUrl = ''
+            const searchForVideo = (obj: unknown) => {
+                if (!obj) return
+                if (typeof obj === 'string' && obj.endsWith('.mp4')) {
+                    if (obj.startsWith('http')) {
+                        videoUrl = obj
+                    } else if (obj.startsWith('/')) {
+                        videoUrl = `https://uu316886-77936903aee0.westd.seetacloud.com:8443${obj}`
+                    }
+                } else if (typeof obj === 'object' && obj !== null) {
+                    for (const value of Object.values(obj)) {
+                        if (videoUrl) break
+                        searchForVideo(value)
+                    }
+                }
+            }
+            searchForVideo(data.data || data.results || data)
+
+            if (videoUrl) {
+                return {
+                    status: 'completed',
+                    videoUrl,
+                    resultUrl: videoUrl,
+                }
+            }
+        }
+
+        return {
+            status: 'failed',
+            error: '任务完成但未返回有效结果'
+        }
+    } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error)
+        _ulogError(`${logPrefix} prompt_id=${promptId} 异常:`, error)
+        return {
+            status: 'failed',
+            error: `查询异常: ${errorMessage}`
+        }
+    }
+}
 /**
  * 查询 MiniMax 任务状态
  */
@@ -1040,7 +1125,7 @@ async function queryViduTaskStatus(
  * 创建标准格式的 externalId
  */
 export function formatExternalId(
-    provider: 'FAL' | 'ARK' | 'GEMINI' | 'GOOGLE' | 'MINIMAX' | 'VIDU' | 'OPENAI' | 'OCOMPAT' | 'BAILIAN' | 'SILICONFLOW',
+    provider: 'FAL' | 'ARK' | 'GEMINI' | 'GOOGLE' | 'MINIMAX' | 'VIDU' | 'OPENAI' | 'OCOMPAT' | 'BAILIAN' | 'SILICONFLOW' | 'SEETACLOUD',
     type: 'VIDEO' | 'IMAGE' | 'BATCH',
     requestId: string,
     endpoint?: string,

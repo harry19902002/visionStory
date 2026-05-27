@@ -21,9 +21,9 @@ export function usePanelPlayer({
   const [isPlaying, setIsPlaying] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const cssAspectRatio = videoRatio.replace(':', '/')
-  const currentVideoUrl = videoUrl
-    ? (showLipSyncVideo && lipSyncVideoUrl ? lipSyncVideoUrl : videoUrl)
-    : undefined
+  const currentVideoUrl = (showLipSyncVideo && lipSyncVideoUrl)
+    ? lipSyncVideoUrl
+    : videoUrl
 
   const handlePreviewImage = useCallback((event?: MouseEvent) => {
     if (event) event.stopPropagation()

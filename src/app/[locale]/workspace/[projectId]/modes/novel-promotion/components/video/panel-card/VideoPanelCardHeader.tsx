@@ -31,11 +31,12 @@ export default function VideoPanelCardHeader({ runtime }: VideoPanelCardHeaderPr
   }, [taskStatus.panelErrorDisplay?.message])
 
   const hasVisibleBaseVideo = !!media.baseVideoUrl
+  const hasPlayableVideo = !!media.currentVideoUrl
   const showFirstLastFrameSwitch = layout.hasNext
 
   return (
     <div className="bg-[var(--glass-bg-muted)] flex items-center justify-center relative" style={{ aspectRatio: player.cssAspectRatio }}>
-      {hasVisibleBaseVideo && player.isPlaying ? (
+      {hasPlayableVideo && player.isPlaying ? (
         <video
           ref={player.videoRef}
           key={`video-${panel.storyboardId}-${panel.panelIndex}-${media.currentVideoUrl}`}
@@ -45,7 +46,7 @@ export default function VideoPanelCardHeader({ runtime }: VideoPanelCardHeaderPr
           className="w-full h-full object-contain bg-black"
           onEnded={() => player.setIsPlaying(false)}
         />
-      ) : hasVisibleBaseVideo ? (
+      ) : hasPlayableVideo ? (
         <div
           className="relative w-full h-full group cursor-pointer"
           onClick={() => void player.handlePlayClick()}

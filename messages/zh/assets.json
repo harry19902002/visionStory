@@ -191,7 +191,12 @@
         "introduction": "角色介绍",
         "introductionPlaceholder": "例如：本书主角，第一人称'我'指的就是她。其他角色称她为'小雪'或'雪姐'...",
         "introductionTip": "描述角色在故事中的身份、叙述视角（如'我'对应谁）、其他角色如何称呼她等",
-        "saveIntroduction": "保存介绍"
+        "saveIntroduction": "保存介绍",
+        "reversePrompt": "反推提示词",
+        "reversePromptTip": "上传本地图片以反推角色形象描述",
+        "reverseFailed": "反推提示词失败",
+        "uploading": "上传中...",
+        "reversing": "反推中..."
     },
     "toolbar": {
         "filter": "筛选",

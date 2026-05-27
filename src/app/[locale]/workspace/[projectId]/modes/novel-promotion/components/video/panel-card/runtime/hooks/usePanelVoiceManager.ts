@@ -13,6 +13,7 @@ interface UsePanelVoiceManagerParams {
   episodeId?: string
   matchedVoiceLines: MatchedVoiceLine[]
   runningVoiceLineIds?: Set<string>
+  failedVoiceLineIds?: Set<string>
   audioFailedMessage: string
 }
 
@@ -21,24 +22,38 @@ export function usePanelVoiceManager({
   episodeId,
   matchedVoiceLines,
   runningVoiceLineIds = EMPTY_RUNNING_VOICE_LINE_IDS,
+  failedVoiceLineIds = EMPTY_RUNNING_VOICE_LINE_IDS,
   audioFailedMessage,
 }: UsePanelVoiceManagerParams) {
-  const generateProjectVoiceMutation = useGenerateProjectVoice(projectId)
   const queryClient = useQueryClient()
+  const generateProjectVoiceMutation = useGenerateProjectVoice(projectId)
+  
   const [submittingAudioIds, setSubmittingAudioIds] = useState<Set<string>>(new Set())
   const [submittingVoiceAudioIds, setSubmittingVoiceAudioIds] = useState<Set<string>>(new Set())
+  
+  const localVoiceLines = useMemo(() => {
+    return matchedVoiceLines.map((line) => {
+      const isFailed = failedVoiceLineIds.has(line.id)
+      return {
+        ...line,
+        errorMessage: isFailed ? audioFailedMessage : null,
+      }
+    })
+  }, [matchedVoiceLines, failedVoiceLineIds, audioFailedMessage])
+
   const [audioGenerateError, setAudioGenerateError] = useState<string | null>(null)
   const [playingVoiceLineId, setPlayingVoiceLineId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const localVoiceLines = matchedVoiceLines
 
   const activeVoiceAudioIds = useMemo(() => {
     const ids = new Set<string>()
-    for (const line of localVoiceLines) {
-      if (runningVoiceLineIds.has(line.id)) ids.add(line.id)
+    for (const line of matchedVoiceLines) {
+      if (runningVoiceLineIds.has(line.id)) {
+        ids.add(line.id)
+      }
     }
     return ids
-  }, [localVoiceLines, runningVoiceLineIds])
+  }, [matchedVoiceLines, runningVoiceLineIds])
 
   useEffect(() => {
     if (submittingVoiceAudioIds.size === 0) return
@@ -46,11 +61,17 @@ export function usePanelVoiceManager({
       const next = new Set(prev)
       for (const lineId of prev) {
         const line = localVoiceLines.find((item) => item.id === lineId)
-        if (!line || line.audioUrl || activeVoiceAudioIds.has(lineId)) next.delete(lineId)
+        // Only remove from local optimistic state if audioUrl is present,
+        // or if we have a definitive failure state.
+        const isFailed = failedVoiceLineIds.has(lineId)
+
+        if (!line || line.audioUrl || isFailed) {
+          next.delete(lineId)
+        }
       }
       return next.size === prev.size ? prev : next
     })
-  }, [activeVoiceAudioIds, localVoiceLines, submittingVoiceAudioIds.size])
+  }, [localVoiceLines, submittingVoiceAudioIds.size, failedVoiceLineIds])
 
   useEffect(() => {
     return () => {
@@ -83,11 +104,13 @@ export function usePanelVoiceManager({
       setPlayingVoiceLineId(null)
       audioRef.current = null
     }
-    audio.onerror = () => {
+    audio.onerror = (e) => {
+      console.error('Audio load error:', e, voiceLine.audioUrl)
       setPlayingVoiceLineId(null)
       audioRef.current = null
     }
-    audio.play().catch(() => {
+    audio.play().catch((e) => {
+      console.error('Audio play failed:', e)
       setPlayingVoiceLineId(null)
       audioRef.current = null
     })

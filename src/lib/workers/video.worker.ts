@@ -242,7 +242,36 @@ async function handleLipSyncTask(job: Job<TaskJobData>) {
   }
 
   if (!panel) throw new Error('Lip-sync panel not found')
-  if (!panel.videoUrl) throw new Error('Panel has no base video')
+  const isSeetaCloud = lipSyncModel?.startsWith('seetacloud')
+
+  if (!panel.videoUrl) {
+    const projectModels = await getProjectModels(job.data.projectId, job.data.userId)
+    const videoModelId = projectModels.videoModel
+    if (!videoModelId) {
+      throw new Error('Panel has no base video and no default video model configured')
+    }
+
+    await reportTaskProgress(job, 10, { stage: 'auto_generate_video', panelId: panel.id })
+
+    const { cosKey, generationMode } = await generateVideoForPanel(
+      job,
+      panel,
+      payload,
+      videoModelId,
+      projectModels.videoRatio,
+      {}
+    )
+
+    await assertTaskActive(job, 'persist_auto_panel_video')
+    await prisma.novelPromotionPanel.update({
+      where: { id: panel.id },
+      data: {
+        videoUrl: cosKey,
+        videoGenerationMode: generationMode,
+      },
+    })
+    panel.videoUrl = cosKey
+  }
 
   const voiceLineId = typeof payload.voiceLineId === 'string' ? payload.voiceLineId : null
   if (!voiceLineId) throw new Error('Lip-sync task missing voiceLineId')
@@ -255,7 +284,9 @@ async function handleLipSyncTask(job: Job<TaskJobData>) {
   const signedVideoUrl = toSignedUrlIfCos(panel.videoUrl, 7200)
   const signedAudioUrl = toSignedUrlIfCos(voiceLine.audioUrl, 7200)
 
-  if (!signedVideoUrl || !signedAudioUrl) {
+  const videoInputUrl = signedVideoUrl
+
+  if (!videoInputUrl || !signedAudioUrl) {
     throw new Error('Lip-sync input media url invalid')
   }
 
@@ -263,10 +294,11 @@ async function handleLipSyncTask(job: Job<TaskJobData>) {
 
   const source = await resolveLipSyncVideoSource(job, {
     userId: job.data.userId,
-    videoUrl: signedVideoUrl,
+    videoUrl: videoInputUrl,
     audioUrl: signedAudioUrl,
     audioDurationMs: typeof voiceLine.audioDuration === 'number' ? voiceLine.audioDuration : undefined,
-    videoDurationMs: toDurationMs(panel.duration),
+    videoDurationMs: isSeetaCloud ? 5000 : toDurationMs(panel.duration),
+    videoPrompt: panel.videoPrompt ?? undefined,
     modelKey: lipSyncModel,
   })
 

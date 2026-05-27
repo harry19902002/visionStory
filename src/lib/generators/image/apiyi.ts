@@ -83,7 +83,7 @@ export class ApiyiImageGenerator extends BaseImageGenerator {
       throw new Error(`PROVIDER_API_KEY_MISSING: ${providerId}`)
     }
 
-    const baseUrl = providerConfig.baseUrl || 'https://api.apiyi.com/v1beta'
+    const baseUrl = providerConfig.baseUrl || 'https://api.apiyi.com/v1'
     await setProxy()
 
     const normalizedOptions = options as ApiyiOptions

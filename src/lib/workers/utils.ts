@@ -541,6 +541,7 @@ export async function resolveLipSyncVideoSource(
     audioUrl: string
     audioDurationMs?: number | null
     videoDurationMs?: number | null
+    videoPrompt?: string | null
     modelKey?: string
     pollProgress?: { start?: number; end?: number }
   },
@@ -577,6 +578,7 @@ export async function resolveLipSyncVideoSource(
       audioUrl: params.audioUrl,
       audioDurationMs: params.audioDurationMs,
       videoDurationMs: params.videoDurationMs,
+      videoPrompt: params.videoPrompt,
     },
     params.userId,
     params.modelKey,

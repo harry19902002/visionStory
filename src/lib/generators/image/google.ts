@@ -48,10 +48,12 @@ export class GoogleGeminiImageGenerator extends BaseImageGenerator {
         const { apiKey } = await getProviderConfig(userId, 'google')
         const {
             aspectRatio,
-            resolution
+            resolution,
+            temperature
         } = options as {
             aspectRatio?: string
             resolution?: string
+            temperature?: number
             provider?: string
             modelId?: string
             modelKey?: string
@@ -63,6 +65,7 @@ export class GoogleGeminiImageGenerator extends BaseImageGenerator {
             'modelKey',
             'aspectRatio',
             'resolution',
+            'temperature',
         ])
         for (const [key, value] of Object.entries(options)) {
             if (value === undefined) continue
@@ -134,6 +137,7 @@ export class GoogleGeminiImageGenerator extends BaseImageGenerator {
             config: {
                 responseModalities: ['TEXT', 'IMAGE'],
                 safetySettings,
+                ...(temperature !== undefined ? { temperature } : {}),
                 ...(aspectRatio || resolution
                     ? {
                         imageConfig: {
@@ -247,10 +251,12 @@ export class GoogleGeminiBatchImageGenerator extends BaseImageGenerator {
         const { apiKey } = await getProviderConfig(userId, 'google')
         const {
             aspectRatio,
-            resolution
+            resolution,
+            temperature
         } = options as {
             aspectRatio?: string
             resolution?: string
+            temperature?: number
             provider?: string
             modelId?: string
             modelKey?: string
@@ -264,6 +270,7 @@ export class GoogleGeminiBatchImageGenerator extends BaseImageGenerator {
             referenceImages,
             ...(aspectRatio ? { aspectRatio } : {}),
             ...(resolution ? { resolution } : {}),
+            ...(temperature !== undefined ? { temperature } : {}),
         })
 
         if (!result.success || !result.batchName) {

@@ -130,15 +130,18 @@ export function useVideoStageRuntime({
     updatePanelLinkMutation,
   })
 
+  const voiceLinesState = useVideoVoiceLines({
+    projectId,
+    matchedVoiceLinesQuery,
+  })
+
   const {
     panelVoiceLines,
     allVoiceLines,
     runningVoiceLineIds,
+    failedVoiceLineIds,
     reloadVoiceLines,
-  } = useVideoVoiceLines({
-    projectId,
-    matchedVoiceLinesQuery,
-  })
+  } = voiceLinesState
 
   const {
     isDownloading,
@@ -546,6 +549,7 @@ export function useVideoStageRuntime({
         projectId={projectId}
         episodeId={episodeId}
         runningVoiceLineIds={runningVoiceLineIds}
+        failedVoiceLineIds={failedVoiceLineIds}
         panelVoiceLines={panelVoiceLines}
         panelVideoPreference={panelVideoPreference}
         savingPrompts={savingPrompts}

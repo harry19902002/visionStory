@@ -11,6 +11,7 @@ export interface VideoPanelCardShellProps {
   projectId: string
   episodeId?: string
   runningVoiceLineIds?: Set<string>
+  failedVoiceLineIds?: Set<string>
   matchedVoiceLines?: MatchedVoiceLine[]
   onLipSync?: (storyboardId: string, panelIndex: number, voiceLineId: string, panelId?: string) => Promise<void>
   showLipSyncVideo: boolean

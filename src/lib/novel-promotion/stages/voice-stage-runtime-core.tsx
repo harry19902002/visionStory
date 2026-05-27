@@ -329,7 +329,6 @@ export function useVoiceStageRuntime({
         isOpen={!!inlineBindingSpeaker}
         speaker={inlineBindingSpeaker ?? ''}
         projectId={projectId}
-        episodeId={episodeId}
         initialSpeakerVoice={inlineBindingSpeaker ? speakerVoices[inlineBindingSpeaker] : undefined}
         onClose={handleCloseInlineBinding}
         onBound={handleInlineVoiceBound}
