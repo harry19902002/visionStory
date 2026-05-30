@@ -109,6 +109,7 @@ export interface MatchedVoiceLine {
   audioUrl?: string
   audioDuration?: number
   emotionStrength?: number
+  voiceInstruction?: string | null
 }
 
 export interface FirstLastFrameParams {

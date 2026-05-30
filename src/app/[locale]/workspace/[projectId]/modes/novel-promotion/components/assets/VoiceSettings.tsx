@@ -13,6 +13,7 @@ import { useUserPreferences } from '@/lib/query/hooks/useUserPreferences'
 import { AppIcon } from '@/components/ui/icons'
 import { useProjectData } from '@/lib/query/hooks/useProjectData'
 import MinimaxVoicePickerDialog from './MinimaxVoicePickerDialog'
+import ArkVoicePickerDialog from './ArkVoicePickerDialog'
 
 interface VoiceSettingsProps {
     characterId: string
@@ -57,6 +58,7 @@ export default function VoiceSettings({
     const { data: userPref } = useUserPreferences()
     const audioModel = project?.novelPromotionData?.audioModel || userPref?.audioModel || ''
     const isMinimax = audioModel.toLowerCase().includes('minimax')
+    const isArk = audioModel.toLowerCase().includes('ark')
 
     // Parse minimax voice settings from voiceId
     const [minimaxVoiceId, setMinimaxVoiceId] = useState('male-qn-qingse')
@@ -71,15 +73,27 @@ export default function VoiceSettings({
             if (parts.length > 1 && parts[1]) setSpeed(parseFloat(parts[1]))
             if (parts.length > 2 && parts[2]) setPitch(parseInt(parts[2]))
             if (parts.length > 3 && parts[3]) setVol(parseFloat(parts[3]))
+        } else if (isArk && voiceId) {
+            const parts = voiceId.split('|')
+            if (parts[0]) setArkVoiceId(parts[0])
+            if (parts.length > 1 && parts[1]) setSpeed(parseFloat(parts[1]))
+            if (parts.length > 2 && parts[2]) setPitch(parseInt(parts[2]))
+            if (parts.length > 3 && parts[3]) setVol(parseFloat(parts[3]))
+            if (parts.length > 4 && parts[4]) setArkInstruction(parts[4])
         }
-    }, [isMinimax, voiceId])
+    }, [isMinimax, isArk, voiceId])
 
     const handleMinimaxChange = (newVoiceId: string, newSpeed: number, newPitch: number, newVol: number) => {
         const combinedVoiceId = `${newVoiceId}|${newSpeed}|${newPitch}|${newVol}`
         onVoiceChange?.(characterId, 'preset', combinedVoiceId, '')
     }
 
-    const hasCustomVoice = !!customVoiceUrl || (isMinimax && !!voiceId)
+    const handleArkChange = (newVoiceId: string, newSpeed: number, newPitch: number, newVol: number, newInstruction: string) => {
+        const combinedVoiceId = `${newVoiceId}|${newSpeed}|${newPitch}|${newVol}|${newInstruction}`
+        onVoiceChange?.(characterId, 'preset', combinedVoiceId, '')
+    }
+
+    const hasCustomVoice = !!customVoiceUrl || ((isMinimax || isArk) && !!voiceId)
 
     const confirmUploadVoice = () => {
         return window.confirm(t('tts.uploadQwenHint'))
@@ -151,6 +165,9 @@ export default function VoiceSettings({
 
     const [isExpanded, setIsExpanded] = useState(false)
     const [isMinimaxDialogOpen, setIsMinimaxDialogOpen] = useState(false)
+    const [isArkDialogOpen, setIsArkDialogOpen] = useState(false)
+    const [arkVoiceId, setArkVoiceId] = useState('zh_female_shuangkuaisisi_moon_bigtts')
+    const [arkInstruction, setArkInstruction] = useState('')
 
     return (
         <div className={containerClass}>
@@ -227,6 +244,68 @@ export default function VoiceSettings({
                                 }} className="w-full accent-[var(--glass-accent-from)]" />
                             </div>
                         </div>
+                    ) : isArk ? (
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-medium text-[var(--glass-text-secondary)] mb-1.5">系统音色</label>
+                                <div className="flex gap-2 items-center">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setIsArkDialogOpen(true)}
+                                        className="flex-1 bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-base)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--glass-text-primary)] hover:border-[var(--glass-stroke-focus)] transition-colors text-left truncate flex justify-between items-center"
+                                    >
+                                        <span>{arkVoiceId || '选择系统音色'}</span>
+                                        <AppIcon name="chevronDown" className="w-4 h-4 text-[var(--glass-text-secondary)] flex-shrink-0" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-[var(--glass-text-secondary)] mb-1.5">语音指令/情绪</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="例如：用悲伤的语气、带东北口音、语速较快" 
+                                    value={arkInstruction} 
+                                    onChange={e => {
+                                        setArkInstruction(e.target.value)
+                                        handleArkChange(arkVoiceId, speed, pitch, vol, e.target.value)
+                                    }} 
+                                    className="w-full bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-base)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--glass-text-primary)] hover:border-[var(--glass-stroke-focus)] focus:border-[var(--glass-accent-from)] focus:outline-none transition-colors" 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-medium text-[var(--glass-text-secondary)] mb-1 flex justify-between">
+                                    <span>语速</span>
+                                    <span className="text-[var(--glass-text-primary)] font-bold">{speed.toFixed(1)}x</span>
+                                </label>
+                                <input type="range" min="0.5" max="2.0" step="0.1" value={speed} onChange={e => {
+                                    const val = parseFloat(e.target.value)
+                                    setSpeed(val)
+                                    handleArkChange(arkVoiceId, val, pitch, vol, arkInstruction)
+                                }} className="w-full accent-[var(--glass-accent-from)]" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-medium text-[var(--glass-text-secondary)] mb-1 flex justify-between">
+                                    <span>音量</span>
+                                    <span className="text-[var(--glass-text-primary)] font-bold">{vol.toFixed(1)}x</span>
+                                </label>
+                                <input type="range" min="0.1" max="10.0" step="0.1" value={vol} onChange={e => {
+                                    const val = parseFloat(e.target.value)
+                                    setVol(val)
+                                    handleArkChange(arkVoiceId, speed, pitch, val, arkInstruction)
+                                }} className="w-full accent-[var(--glass-accent-from)]" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-medium text-[var(--glass-text-secondary)] mb-1 flex justify-between">
+                                    <span>声调</span>
+                                    <span className="text-[var(--glass-text-primary)] font-bold">{pitch > 0 ? `+${pitch}` : pitch}</span>
+                                </label>
+                                <input type="range" min="-50" max="50" step="1" value={pitch} onChange={e => {
+                                    const val = parseInt(e.target.value)
+                                    setPitch(val)
+                                    handleArkChange(arkVoiceId, speed, val, vol, arkInstruction)
+                                }} className="w-full accent-[var(--glass-accent-from)]" />
+                            </div>
+                        </div>
                     ) : (
                         <>
                             {/* 隐藏的音频文件输入 */}
@@ -282,7 +361,7 @@ export default function VoiceSettings({
                             </div>
 
                             {/* 试听按钮 - 仅在有音频时显示 */}
-                            {hasCustomVoice && !isMinimax && (
+                            {hasCustomVoice && !isMinimax && !isArk && (
                                 <button
                                     onClick={handlePreviewVoice}
                                     className={`w-full mt-2 px-3 py-2 border rounded-lg text-sm font-medium transition-all ${isPreviewingVoice
@@ -312,6 +391,15 @@ export default function VoiceSettings({
                 onSelect={(id) => {
                     setMinimaxVoiceId(id)
                     handleMinimaxChange(id, speed, pitch, vol)
+                }}
+            />
+            <ArkVoicePickerDialog
+                isOpen={isArkDialogOpen}
+                onClose={() => setIsArkDialogOpen(false)}
+                currentVoiceId={arkVoiceId}
+                onSelect={(id) => {
+                    setArkVoiceId(id)
+                    handleArkChange(id, speed, pitch, vol, arkInstruction)
                 }}
             />
         </div>

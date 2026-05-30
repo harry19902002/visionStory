@@ -511,6 +511,7 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
             content: vl.content,
             lineIndex: vl.lineIndex,
             emotionStrength: vl.emotionStrength || 0.5,
+            voiceInstruction: vl.voiceInstruction || null,
             matchedPanel: panel ? {
               storyboardId: clipEntry.clipId,
               panelIndex: i
@@ -527,6 +528,7 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
             content: vl.content,
             lineIndex: vl.lineIndex,
             emotionStrength: vl.emotionStrength || 0.5,
+            voiceInstruction: vl.voiceInstruction || null,
             matchedPanel: null
           })
         }

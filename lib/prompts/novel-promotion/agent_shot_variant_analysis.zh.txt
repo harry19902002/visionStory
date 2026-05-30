@@ -35,6 +35,9 @@
    - 拉远：从特写扩展到中景/全景，展示环境关系
    - 推近：从中景聚焦到特写，强调情绪/细节
    - 局部特写：聚焦画面中的某个物品或身体部位
+   - 视线平行移：摄影机水平小幅度移动，利用前后景的视差增强立体感。
+   - 过肩轴线切：带有一点点前方角色的肩膀边缘，镜头缓慢地向主体沉降。
+   - 景深推：景深极深，从画面最近处（前景）的物体一直清晰到最远处（背景），摄影机稳定向前推进，营造强烈的空间压缩感和沉浸感。
 
 3. **时间/动作变化**
    - 动作前/后：展示动作发生前一刻或后一刻
@@ -56,9 +59,9 @@
     "id": 1,
     "title": "简短标题（如：主观视角-手机屏幕）",
     "description": "详细描述这个镜头变体会呈现什么画面",
-    "shot_type": "推荐景别（如：主观特写）",
-    "camera_move": "推荐运镜（如：固定）",
-    "video_prompt": "用于图片生成的详细提示词，使用年龄+性别描述人物",
+    "shot_type": "推荐景别（如：主观特写、平视特写、过肩中景、仰拍近景）",
+    "camera_move": "推荐运镜（如：缓推、水平移动）",
+    "video_prompt": "用于视频生成的详细提示词，使用年龄+性别描述人物，必须在英文提示词中加入平稳运镜控制词（如 slow subtle movement, gentle breathing camera, high stability, locked-on close-up ）",
     "creative_score": 5
   }
 ]
@@ -69,8 +72,8 @@
 - `title`: 简短标题，格式如"类型-具体内容"
 - `description`: 详细描述该变体的画面内容
 - `shot_type`: 推荐景别，如"平视中景"、"俯拍全景"、"主观特写"
-- `camera_move`: 推荐运镜，如"固定"、"缓推"
-- `video_prompt`: 图片生成提示词，必须用"年龄+性别"替代角色名（如"年轻女子"、"中年男子"）
+- `camera_move`: 推荐运镜，如“缓推”、“水平移动”
+- `video_prompt`: 视频生成提示词，必须用"年龄+性别"替代角色名（如"年轻女子"、"中年男子"），必须在英文提示词中加入平稳运镜控制词（如 slow subtle movement, gentle breathing camera, high stability, locked-on close-up ）
 - `creative_score`: 创意程度 1-5，5为最有创意
 
 ======================================
@@ -87,7 +90,7 @@
     "title": "主观视角-手机屏幕",
     "description": "第一人称视角，展示手机屏幕内容，手机边缘和手指可见",
     "shot_type": "主观特写",
-    "camera_move": "固定",
+    "camera_move": "Slow subtle push-in",
     "video_prompt": "POV shot of a smartphone screen, fingers holding the phone edges, bright screen glow in dark room, close-up perspective",
     "creative_score": 5
   },
@@ -96,7 +99,7 @@
     "title": "脸部特写",
     "description": "女子脸部特写，手机屏光打在脸上，呈现表情细节",
     "shot_type": "特写",
-    "camera_move": "固定",
+    "camera_move": "Subtle handheld breathing effect, cinematic stability",
     "video_prompt": "Close-up of a young woman's face illuminated by phone screen light, soft blue glow on skin, expression of focus, lying down angle",
     "creative_score": 4
   },
@@ -105,7 +108,7 @@
     "title": "俯拍全景",
     "description": "从天花板角度俯拍，展示整个床铺和女子姿态",
     "shot_type": "俯拍全景",
-    "camera_move": "固定",
+    "camera_move": "Smooth and gentle rack focus",
     "video_prompt": "Top-down bird's eye view of bedroom, young woman lying on bed holding phone, cozy blankets, bedroom interior visible",
     "creative_score": 4
   },
@@ -114,7 +117,7 @@
     "title": "手部特写",
     "description": "特写手指在手机屏幕上滑动",
     "shot_type": "极端特写",
-    "camera_move": "固定",
+    "camera_move": "Rack focus, Rack focus from foreground to background",
     "video_prompt": "Extreme close-up of feminine fingers swiping on smartphone touchscreen, colorful app interface, shallow depth of field",
     "creative_score": 3
   },
@@ -123,7 +126,7 @@
     "title": "侧脸剪影",
     "description": "逆光侧拍，女子轮廓剪影，手机屏幕微微发光",
     "shot_type": "近景",
-    "camera_move": "固定",
+    "camera_move": "Slow 90-degree arc shot, cinematic camera movement",
     "video_prompt": "Silhouette profile of young woman in dark room, backlit by dim blue phone glow, artistic dramatic lighting, moody atmosphere",
     "creative_score": 5
   }

@@ -36,4 +36,5 @@ Strict constraints:
 2. Array length must equal {panel_count}.
 3. Each character object must contain only "name" and "acting".
 4. Keep character names exactly consistent with panel input.
-5. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.
+5. ⚠️ ABSOLUTELY NO head-turning actions (e.g., turning head, looking back, tilting head). This breaks face consistency with reference images in video generation! Eye movement must be described via gaze shifts (e.g., "gaze drops", "eyes shift sideways") while keeping the head direction mostly fixed.
+6. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

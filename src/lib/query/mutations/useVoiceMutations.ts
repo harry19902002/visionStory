@@ -15,6 +15,7 @@ type ProjectVoiceLine = {
     content: string
     emotionPrompt: string | null
     emotionStrength: number | null
+    voiceInstruction: string | null
     audioUrl: string | null
     updatedAt: string | null
     lineTaskRunning: boolean

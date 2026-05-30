@@ -17,7 +17,7 @@ export interface TestProviderResult {
   steps: TestStep[]
 }
 
-type PresetProviderType = 'ark' | 'google' | 'openrouter' | 'minimax' | 'fal' | 'vidu'
+type PresetProviderType = 'ark' | 'ark-speech' | 'google' | 'openrouter' | 'minimax' | 'fal' | 'vidu'
   | 'bailian'
   | 'siliconflow'
   | 'apiyi'
@@ -422,8 +422,101 @@ async function testArkProvider(apiKey: string): Promise<TestProviderResult> {
       message: toErrorMessage(error),
     })
     return { success: false, steps }
+    return { success: false, steps }
   }
 }
+
+// ---------------------------------------------------------------------------
+// Volcengine Ark Speech
+// ---------------------------------------------------------------------------
+
+async function testArkSpeechProvider(apiKey: string): Promise<TestProviderResult> {
+  const steps: TestStep[] = []
+  const resourceId = 'seed-tts-2.0'
+  const modelName = 'seed-tts-2.0-expressive'
+  const voiceId = 'zh_female_sophie_uranus_bigtts'
+
+  try {
+    const body = {
+      user: {
+        uid: 'test_user',
+      },
+      req_params: {
+        text: '测试',
+        model: modelName,
+        speaker: voiceId,
+        audio_params: {
+          format: 'mp3',
+          sample_rate: 24000,
+        }
+      }
+    }
+
+    const response = await fetch('https://openspeech.bytedance.com/api/v3/tts/unidirectional', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Api-Key': apiKey,
+        'X-Api-Resource-Id': resourceId,
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30_000),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '')
+      steps.push({
+        name: 'audioGen',
+        status: 'fail',
+        message: `HTTP ${response.status}`,
+        detail: errorText.slice(0, 500),
+      })
+      return { success: false, steps }
+    }
+
+    const text = await response.text()
+    // 成功时返回多个 JSON 拼接的 NDJSON，直接取第一行解析
+    const firstChunk = text.split('\n')[0] || ''
+    
+    let data: Record<string, unknown> = {}
+    try {
+      data = JSON.parse(firstChunk)
+    } catch {
+      // 容错：如果解析失败但 HTTP 是 200，且包含音频头信息，通常也是成功的
+      if (text.includes('"code":0')) {
+        data = { code: 0 }
+      } else {
+        throw new Error('Invalid response format from Ark Speech')
+      }
+    }
+
+    const code = data.code || data.status_code
+    if (code && code !== 20000000 && code !== 0) {
+      steps.push({
+         name: 'audioGen',
+         status: 'fail',
+         message: typeof data.message === 'string' ? data.message : 'API error',
+         detail: `Code: ${code}`,
+      })
+      return { success: false, steps }
+    }
+    
+    steps.push({
+      name: 'audioGen',
+      status: 'pass',
+      message: 'Connection successful',
+    })
+    return { success: true, steps }
+  } catch (error) {
+    steps.push({
+      name: 'audioGen',
+      status: 'fail',
+      message: toErrorMessage(error),
+    })
+    return { success: false, steps }
+  }
+}
+
 
 // ---------------------------------------------------------------------------
 // Google AI Studio (official)
@@ -916,6 +1009,8 @@ export async function testProviderConnection(payload: TestProviderPayload): Prom
       return testCompatibleProvider(baseUrl!, apiKey, llmModel)
     case 'ark':
       return testArkProvider(apiKey)
+    case 'ark-speech':
+      return testArkSpeechProvider(apiKey)
     case 'google':
       return testGoogleOfficial(apiKey)
     case 'openrouter':

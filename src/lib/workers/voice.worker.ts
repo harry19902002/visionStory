@@ -57,7 +57,7 @@ export function createVoiceWorker() {
     async (job) => await withTaskLifecycle(job, processVoiceTask),
     {
       connection: queueRedis,
-      concurrency: Number.parseInt(process.env.QUEUE_CONCURRENCY_VOICE || '10', 10) || 10,
+      concurrency: Number.parseInt(process.env.QUEUE_CONCURRENCY_VOICE || '1', 10) || 1,
     },
   )
 }

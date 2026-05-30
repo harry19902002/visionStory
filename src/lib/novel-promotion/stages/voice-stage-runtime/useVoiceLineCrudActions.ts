@@ -24,7 +24,7 @@ interface UseVoiceLineCrudActionsParams {
   handleCancelEdit: () => void
   notifyVoiceLinesChanged: () => void
   createVoiceLineMutation: MutationLike<{ episodeId: string; content: string; speaker: string; matchedPanelId: string | null }, { voiceLine: VoiceLine }>
-  updateVoiceLineMutation: MutationLike<{ lineId: string; content?: string; speaker?: string; matchedPanelId?: string | null; audioUrl?: string | null; emotionPrompt?: string | null; emotionStrength?: number }, { voiceLine: VoiceLine }>
+  updateVoiceLineMutation: MutationLike<{ lineId: string; content?: string; speaker?: string; matchedPanelId?: string | null; audioUrl?: string | null; emotionPrompt?: string | null; emotionStrength?: number; voiceInstruction?: string | null }, { voiceLine: VoiceLine }>
   deleteVoiceLineMutation: MutationLike<{ lineId: string }>
 }
 
@@ -174,12 +174,12 @@ export function useVoiceLineCrudActions({
   const handleSaveEmotionSettings = useCallback(async (
     lineId: string,
     emotionPrompt: string | null,
-    emotionStrength: number,
+    voiceInstruction: string | null,
   ) => {
     try {
-      await updateVoiceLineMutation.mutateAsync({ lineId, emotionPrompt, emotionStrength })
+      await updateVoiceLineMutation.mutateAsync({ lineId, emotionPrompt, voiceInstruction })
       setVoiceLines((prev) => prev.map((line) => (
-        line.id === lineId ? { ...line, emotionPrompt, emotionStrength } : line
+        line.id === lineId ? { ...line, emotionPrompt, voiceInstruction } : line
       )))
     } catch (error: unknown) {
       if (shouldShowError(error)) {

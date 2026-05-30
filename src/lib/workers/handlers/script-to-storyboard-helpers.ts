@@ -349,10 +349,12 @@ export async function persistStoryboardOutputs(params: {
         matchedPanelId = resolvedPanelId
       }
 
-      if (typeof row.emotionStrength !== 'number' || !Number.isFinite(row.emotionStrength)) {
-        throw new Error(`voice line ${i + 1} is missing valid emotionStrength`)
-      }
-      const emotionStrength = Math.min(1, Math.max(0.1, row.emotionStrength))
+      const emotionStrength = (typeof row.emotionStrength === 'number' && Number.isFinite(row.emotionStrength))
+        ? Math.min(1, Math.max(0.1, row.emotionStrength))
+        : 0.4
+      const voiceInstruction = typeof row.voiceInstruction === 'string' && row.voiceInstruction.trim()
+        ? row.voiceInstruction.trim()
+        : null
 
       if (typeof row.lineIndex !== 'number' || !Number.isFinite(row.lineIndex)) {
         throw new Error(`voice line ${i + 1} is missing valid lineIndex`)
@@ -381,6 +383,7 @@ export async function persistStoryboardOutputs(params: {
           speaker: row.speaker.trim(),
           content: row.content,
           emotionStrength,
+          voiceInstruction,
           matchedPanelId,
           matchedStoryboardId,
           matchedPanelIndex,
@@ -389,6 +392,7 @@ export async function persistStoryboardOutputs(params: {
           speaker: row.speaker.trim(),
           content: row.content,
           emotionStrength,
+          voiceInstruction,
           matchedPanelId,
           matchedStoryboardId,
           matchedPanelIndex,

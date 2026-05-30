@@ -7,6 +7,7 @@ import { extractStorageKey, getSignedUrl, toFetchableUrl, uploadObject } from '@
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 import { synthesizeWithBailianTTS } from '@/lib/providers/bailian'
 import { synthesizeWithMinimaxTTS } from '@/lib/voice/minimax-tts'
+import { synthesizeWithArkTTS } from '@/lib/generators/audio/ark'
 import {
   parseSpeakerVoiceMap,
   resolveVoiceBindingForProvider,
@@ -177,6 +178,7 @@ export async function generateVoiceLine(params: {
       content: true,
       emotionPrompt: true,
       emotionStrength: true,
+      voiceInstruction: true,
     },
   })
   if (!line) {
@@ -277,12 +279,32 @@ export async function generateVoiceLine(params: {
       emotion: line.emotionPrompt,
       apiKey,
     })
+  } else if (providerKey === 'ark' || providerKey === 'ark-speech') {
+    if (!voiceBinding || voiceBinding.provider !== 'ark') {
+      throw new Error('请先为该发言人绑定火山引擎音色')
+    }
+    const { apiKey } = await getProviderConfig(params.userId, audioSelection.provider)
+    const result = await synthesizeWithArkTTS({
+      text,
+      modelId: audioSelection.modelId,
+      voiceId: voiceBinding.voiceId,
+      rate: voiceBinding.speed ?? 1.0,
+      pitch: voiceBinding.pitch ?? 0,
+      vol: voiceBinding.vol ?? 1.0,
+      instruction: voiceBinding.instruction || line.voiceInstruction || line.emotionPrompt || undefined,
+      userId: params.userId,
+      apiKey,
+    })
+    generated = {
+      audioData: result.audioData,
+      audioDuration: getWavDurationFromBuffer(result.audioData),
+    }
   } else {
     throw new Error(`AUDIO_PROVIDER_UNSUPPORTED: ${audioSelection.provider}`)
   }
 
-  const audioKey = `voice/${params.projectId}/${episodeId}/${line.id}.wav`
-  const cosKey = await uploadObject(generated.audioData, audioKey)
+  const audioKey = `voice/${params.projectId}/${episodeId}/${line.id}-${Date.now()}.wav`
+  const cosKey = await uploadObject(generated.audioData, audioKey, 3, 'audio/wav')
 
   await checkCancelled?.()
 

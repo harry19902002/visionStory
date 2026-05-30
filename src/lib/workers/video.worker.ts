@@ -18,6 +18,8 @@ import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/model-capabilities/lookup'
 import { parseModelKeyStrict } from '@/lib/model-config-contract'
 import { getProviderConfig } from '@/lib/api-config'
+import { executeAiTextStep } from '@/lib/ai-runtime'
+import { buildPrompt, getPromptTemplate, PROMPT_IDS } from '@/lib/prompt-i18n'
 
 type AnyObj = Record<string, unknown>
 type VideoOptionValue = string | number | boolean
@@ -101,6 +103,47 @@ async function generateVideoForPanel(
     throw new Error(`Panel ${panel.id} has no video prompt`)
   }
 
+  let finalPrompt = prompt
+  if (modelId.toLowerCase().includes('ltx')) {
+    const projectModels = await getProjectModels(job.data.projectId, job.data.userId)
+    const llmModel = projectModels.analysisModel
+    if (llmModel) {
+      // 同样的逻辑：在 LTX 扩写时，优先使用最新的 panel.description（画面描述），
+      // 避免旧的 videoPrompt（英文提示词）覆盖了用户对描述的修改。
+      const sourceForExpansion = firstLastCustomPrompt || customPrompt || panel.description || finalPrompt
+      const systemPrompt = buildPrompt({
+        promptId: PROMPT_IDS.NP_VIDEO_PROMPT_EXPANSION,
+        locale: job.data.locale || 'zh',
+        variables: { prompt_input: sourceForExpansion }
+      })
+      try {
+        const response = await executeAiTextStep({
+          userId: job.data.userId,
+          model: llmModel,
+          projectId: job.data.projectId,
+          messages: [{ role: 'user', content: systemPrompt }],
+          action: 'video_prompt_expansion',
+          meta: {
+            stepId: job.data.taskId,
+            stepTitle: 'Expand Video Prompt',
+            stepIndex: 1,
+            stepTotal: 1,
+          },
+        })
+        if (response.text) {
+          finalPrompt = response.text.trim()
+          
+          await prisma.novelPromotionPanel.update({
+            where: { id: panel.id },
+            data: { videoPrompt: finalPrompt },
+          })
+        }
+      } catch (err) {
+        console.error('Failed to expand video prompt:', err)
+      }
+    }
+  }
+
   const sourceImageUrl = toSignedUrlIfCos(panel.imageUrl, 3600)
   if (!sourceImageUrl) {
     throw new Error(`Panel ${panel.id} image url invalid`)
@@ -146,7 +189,7 @@ async function generateVideoForPanel(
     modelId: model,
     imageUrl: sourceImageBase64,
     options: {
-      prompt,
+      prompt: finalPrompt,
       ...(projectVideoRatio ? { aspectRatio: projectVideoRatio } : {}),
       ...generationOptions,
       generationMode,

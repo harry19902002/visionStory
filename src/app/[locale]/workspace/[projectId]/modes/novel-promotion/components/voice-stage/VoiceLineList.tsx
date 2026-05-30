@@ -18,7 +18,7 @@ interface VoiceLineListProps {
   onLocatePanel: (line: VoiceLine) => void
   onDeleteLine: (lineId: string) => Promise<void>
   onDeleteAudio: (lineId: string) => Promise<void>
-  onSaveEmotionSettings: (lineId: string, emotionPrompt: string | null, emotionStrength: number) => Promise<void>
+  onSaveEmotionSettings: (lineId: string, emotionPrompt: string | null, voiceInstruction: string | null) => Promise<void>
   onAnalyze: () => Promise<void>
 }
 

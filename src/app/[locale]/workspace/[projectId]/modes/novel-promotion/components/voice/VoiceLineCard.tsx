@@ -1,7 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import EmotionSettingsPanel from './EmotionSettingsPanel'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState, type TaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
@@ -33,6 +32,7 @@ interface VoiceLine {
     content: string
     emotionPrompt: string | null
     emotionStrength: number | null
+    voiceInstruction: string | null
     audioUrl: string | null
     updatedAt: string | null
     lineTaskRunning: boolean
@@ -54,7 +54,7 @@ interface VoiceLineCardProps {
     onLocatePanel?: (line: VoiceLine) => void
     onDelete: (lineId: string) => void
     onDeleteAudio: (lineId: string) => void
-    onSaveEmotionSettings: (lineId: string, emotionPrompt: string | null, emotionStrength: number) => void
+    onSaveEmotionSettings: (lineId: string, emotionPrompt: string | null, voiceInstruction: string | null) => void
 }
 
 export default function VoiceLineCard({
@@ -73,7 +73,19 @@ export default function VoiceLineCard({
     onSaveEmotionSettings
 }: VoiceLineCardProps) {
     const t = useTranslations('voice')
-    const [isEmotionExpanded, setIsEmotionExpanded] = useState(false)
+    const [inlineInstruction, setInlineInstruction] = useState(line.voiceInstruction || '')
+
+    useEffect(() => {
+        setInlineInstruction(line.voiceInstruction || '')
+    }, [line.voiceInstruction])
+
+    const handleSaveInlineInstruction = () => {
+        const value = inlineInstruction.trim() || null
+        if (value !== line.voiceInstruction) {
+            onSaveEmotionSettings(line.id, line.emotionPrompt, value)
+        }
+    }
+
     const hasPanelBinding = !!onLocatePanel && !!line.matchedStoryboardId && line.matchedPanelIndex !== null && line.matchedPanelIndex !== undefined
     const locateTitle = t("lineCard.locateVideo")
     const inlineStatusState = isVoiceTaskRunning
@@ -114,15 +126,19 @@ export default function VoiceLineCard({
                         {line.content}
                     </p>
                     {hasVoice && (
-                        <button
-                            onClick={() => setIsEmotionExpanded(!isEmotionExpanded)}
-                            className="w-max mt-2 px-2 py-1 text-xs text-[var(--glass-tone-info-fg)] hover:bg-[var(--glass-tone-info-bg)] rounded flex items-center gap-1 font-medium transition-colors"
-                        >
-                            <AppIcon name="chevronDown" className={`w-3.5 h-3.5 transition-transform ${isEmotionExpanded ? 'rotate-180' : ''}`} />
-                            {line.emotionPrompt || (line.emotionStrength !== null && line.emotionStrength !== 0.4)
-                                ? t("lineCard.emotionConfigured")
-                                : t("lineCard.emotionSettings")}
-                        </button>
+                        <input
+                            type="text"
+                            className="w-full mt-2 px-2 py-1 text-xs text-[var(--glass-tone-info-fg)] bg-transparent border border-transparent hover:border-[var(--glass-stroke-focus)]/60 focus:border-[var(--glass-stroke-focus)] focus:bg-[var(--glass-bg-surface)] rounded transition-all outline-none"
+                            placeholder="输入语音指令（控制情绪、方言、语气、语速等）"
+                            value={inlineInstruction}
+                            onChange={(e) => setInlineInstruction(e.target.value)}
+                            onBlur={handleSaveInlineInstruction}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.currentTarget.blur()
+                                }
+                            }}
+                        />
                     )}
                 </div>
 
@@ -178,19 +194,6 @@ export default function VoiceLineCard({
                 </div>
             </div>
 
-            {/* 展开的情绪面板 */}
-            {isEmotionExpanded && hasVoice && (
-                <div className="border-t border-[var(--glass-stroke-base)]/60 bg-[var(--glass-bg-muted)]/30">
-                    <EmotionSettingsPanel
-                        lineId={line.id}
-                        emotionPrompt={line.emotionPrompt}
-                        emotionStrength={line.emotionStrength ?? 0.4}
-                        onSave={onSaveEmotionSettings}
-                        onGenerate={onGenerate}
-                        isVoiceGenerationRunning={isVoiceTaskRunning}
-                    />
-                </div>
-            )}
         </div>
     )
 }

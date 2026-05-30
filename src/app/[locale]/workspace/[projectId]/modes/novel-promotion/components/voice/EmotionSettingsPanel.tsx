@@ -23,8 +23,8 @@ const MINIMAX_EMOTIONS = [
 interface EmotionSettingsPanelProps {
     lineId: string
     emotionPrompt: string | null
-    emotionStrength: number
-    onSave: (lineId: string, emotionPrompt: string | null, emotionStrength: number) => void
+    voiceInstruction: string | null
+    onSave: (lineId: string, emotionPrompt: string | null, voiceInstruction: string | null) => void
     onGenerate: (lineId: string) => void
     isVoiceGenerationRunning: boolean
 }
@@ -32,7 +32,7 @@ interface EmotionSettingsPanelProps {
 export default function EmotionSettingsPanel({
     lineId,
     emotionPrompt,
-    emotionStrength,
+    voiceInstruction,
     onSave,
     onGenerate,
     isVoiceGenerationRunning
@@ -55,24 +55,36 @@ export default function EmotionSettingsPanel({
     const isMinimax = audioModel.toLowerCase().includes('minimax')
 
     const [prompt, setPrompt] = useState(emotionPrompt || '')
-    const [strength, setStrength] = useState(emotionStrength)
+    const [instruction, setInstruction] = useState(voiceInstruction || '')
 
     const handlePromptChange = (value: string) => {
         setPrompt(value)
     }
 
-    const handleStrengthChange = (value: number) => {
-        setStrength(value)
-    }
-
     const handleGenerate = () => {
-        onSave(lineId, prompt.trim() || null, strength)
+        onSave(lineId, prompt.trim() || null, instruction.trim() || null)
         onGenerate(lineId)
     }
 
     return (
         <div className="px-4 py-3 bg-[var(--glass-tone-info-bg)] space-y-3">
-            {/* 情绪提示词 */}
+            {/* 语音指令 */}
+            {!isMinimax && (
+                <div>
+                    <label className="block text-xs text-[var(--glass-tone-info-fg)] mb-1.5 font-medium">
+                        语音指令 <span className="text-[var(--glass-text-tertiary)] font-normal">控制情绪、方言、语气、语速等</span>
+                    </label>
+                    <input
+                        type="text"
+                        value={instruction}
+                        onChange={(e) => setInstruction(e.target.value)}
+                        placeholder="例如：用悲伤的语气说、带东北口音、语速较快"
+                        className="w-full px-3 py-2 text-sm border border-[var(--glass-stroke-focus)]/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--glass-tone-info-fg)]/50 focus:border-[var(--glass-stroke-focus)] bg-[var(--glass-bg-surface)]"
+                    />
+                </div>
+            )}
+
+            {/* 情绪提示词 (Minimax) */}
             <div>
                 <label className="block text-xs text-[var(--glass-tone-info-fg)] mb-1.5 font-medium">
                     {t("emotionPrompt")} {isMinimax ? '' : <span className="text-[var(--glass-text-tertiary)] font-normal">{t("emotionPromptTip")}</span>}
@@ -95,28 +107,6 @@ export default function EmotionSettingsPanel({
                     />
                 )}
             </div>
-
-            {/* 情绪强度滑块 */}
-            {!isMinimax && (
-                <div>
-                    <label className="block text-xs text-[var(--glass-tone-info-fg)] mb-1.5 font-medium">
-                        {t("emotionStrength")}: <span className="font-bold">{strength.toFixed(1)}</span>
-                    </label>
-                    <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.1"
-                        value={strength}
-                        onChange={(e) => handleStrengthChange(parseFloat(e.target.value))}
-                        className="w-full h-2 bg-[var(--glass-tone-info-bg)] rounded-lg appearance-none cursor-pointer accent-[var(--glass-accent-from)]"
-                    />
-                    <div className="flex justify-between text-[10px] text-[var(--glass-text-tertiary)] mt-1">
-                        <span>{t("flat")}</span>
-                        <span>{t("intense")}</span>
-                    </div>
-                </div>
-            )}
 
             {/* 生成语音按钮 */}
             <button

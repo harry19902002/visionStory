@@ -261,6 +261,7 @@ export const PATCH = apiHandler(async (
     voicePresetId,
     emotionPrompt,
     emotionStrength,
+    voiceInstruction,
     content,
     audioUrl,
     matchedPanelId
@@ -272,6 +273,7 @@ export const PATCH = apiHandler(async (
     if (voicePresetId !== undefined) updateData.voicePresetId = voicePresetId
     if (emotionPrompt !== undefined) updateData.emotionPrompt = emotionPrompt || null
     if (emotionStrength !== undefined) updateData.emotionStrength = emotionStrength
+    if (voiceInstruction !== undefined) updateData.voiceInstruction = voiceInstruction
     if (content !== undefined) {
       if (!content.trim()) {
         throw new ApiError('INVALID_PARAMS')

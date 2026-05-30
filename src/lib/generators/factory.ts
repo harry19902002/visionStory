@@ -32,6 +32,7 @@ import {
     SiliconFlowVideoGenerator,
 } from './official'
 import { MinimaxTTSGenerator } from './audio/minimax'
+import { ArkTTSGenerator } from './audio/ark'
 
 /**
  * 根据 provider 创建图片生成器
@@ -114,6 +115,9 @@ export function createVideoGenerator(provider: string): VideoGenerator {
 export function createAudioGenerator(provider: string): AudioGenerator {
     const providerKey = getProviderKey(provider).toLowerCase()
     switch (providerKey) {
+        case 'ark':
+        case 'ark-speech':
+            return new ArkTTSGenerator()
         case 'bailian':
             return new BailianAudioGenerator()
         case 'siliconflow':

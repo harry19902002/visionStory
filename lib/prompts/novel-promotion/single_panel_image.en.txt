@@ -21,6 +21,12 @@ Style requirement:
 
 Execution rules:
 1. Respect panel composition, character placement, and action logic.
+2. **Continuity & Cinematic Quality**:
+   - **Plot continuity**: Actions and expressions must naturally progress from the previous shot. Background environment must smoothly transition.
+   - **Character consistency**: Character appearance (hair color, body type, clothing) must remain exactly consistent and seamless without sudden changes.
+   - **Visual unity**: Lighting and color tone must match the reference images.
+   - **Cinematic composition**: Each panel must use cinematic composition with explicit shot types (e.g., close-up, medium shot, wide shot), lighting hierarchy, spatial depth, and convey clear camera movement rhythms (even as a static image, it should express the tension of slow push, tracking, handheld, etc.).
+   - **Image quality**: Must ensure high definition, realistic texture, no noise, and no distortion, making it suitable as a basis for the next storyboard generation.
 2. If storyboard data contains `slot`, treat it as a preferred placement anchor for consistency, not as an absolute restriction.
 3. If location data contains `available_slots`, treat them as typical anchor references rather than a complete map of all valid positions.
 4. When the panel description, source text, action flow, or scene nature implies movement, entry/exit, path traversal, transition space, temporary space, empty space, or abstract/non-literal space, do not force the character to remain inside an existing slot.

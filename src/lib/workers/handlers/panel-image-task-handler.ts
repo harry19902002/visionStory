@@ -125,7 +125,7 @@ function buildPanelPromptContext(params: {
       shot_type: params.panel.shotType || '',
       camera_move: params.panel.cameraMove || '',
       description: params.panel.description || '',
-      image_prompt: params.panel.imagePrompt || '',
+      // image_prompt is intentionally omitted here to force the LLM to generate a fresh prompt based on the description
       video_prompt: params.panel.videoPrompt || '',
       location: params.panel.location || '',
       characters: panelCharacters,
@@ -330,6 +330,7 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
       data: {
         imageUrl: candidates[0] || null,
         candidateImages: candidateCount > 1 ? JSON.stringify(candidates) : null,
+        imagePrompt: expandedPromptText,
       },
     })
   } else {
@@ -338,6 +339,7 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
       data: {
         previousImageUrl: panel.imageUrl,
         candidateImages: JSON.stringify(candidates),
+        imagePrompt: expandedPromptText,
       },
     })
   }

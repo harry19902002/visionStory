@@ -52,5 +52,14 @@
       "mode": "flat",
       "flatAmount": 0
     }
+  },
+  {
+    "apiType": "voice",
+    "provider": "ark",
+    "modelId": "seed-tts-2.0-expressive",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0
+    }
   }
 ]

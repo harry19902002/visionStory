@@ -46,8 +46,14 @@ Output schema example (field names must be preserved):
 Rules:
 1. Keep panel order unchanged.
 2. Keep source_text semantically aligned with input; do not rewrite story meaning.
-3. video_prompt should be motion-ready and concrete.
-4. Prefer age+gender wording in video_prompt when naming actors in camera directions.
+3. **video_prompt Rule**: Video/image models do not understand character names. You MUST replace names with **age+gender**. The `video_prompt` MUST be a strictly comma-separated sequence of descriptive phrases. **DO NOT use any punctuation other than commas and periods.**
+   **Formula**: Subject (age, gender, appearance, clothing, action, expression) + Scene (environment, background elements) + Motion (shot type, camera movement, motion rhythm) + Aesthetics (lighting, spatial relationship) + Style (cinematic lighting, high-definition, realistic texture, no noise, no distortion).
+4. **Continuity & Aesthetics**: 
+   - **Plot continuity**: Actions and expressions must naturally progress from the previous shot. Background environment must smoothly transition.
+   - **Character consistency**: Hair color, body type, and clothing must remain exactly consistent and seamless without sudden changes.
+   - **Cinematic feel**: Each panel must use cinematic composition with explicit shot types (e.g., close-up, medium shot, wide shot, high angle), lighting hierarchy, spatial depth, and clear camera movement rhythms (e.g., slow push-in, quick cut, handheld, tracking).
+   - **Dynamics priority**: Even for dialogue or static scenes, include micro-movements (e.g., nodding, smiling) and subtle camera motion. EXCEPT for close-ups, which MUST explicitly say "static camera".
+   - **Example**: Young woman, black long hair, wearing a red coat, red eyes, slowly looking down, teardrops falling, hospital ward, faint sunlight from window, close-up, static camera, cinematic composition, high-definition, realistic texture, no noise, no distortion.
 5. Preserve every input `slot` when the character is stably positioned, and reflect it as a preferred anchor in refined description/video_prompt.
 6. `slot` is not an absolute boundary. If the shot is clearly about movement, entry/exit, path traversal, transition space, temporary space, empty space, imagination, dream, memory, or abstract/non-literal space, you may remove `slot` or keep it without forcing a rigid static match.
 7. When no `slot` is used, decide placement freely from source text, action flow, spatial logic, and cinematic staging.

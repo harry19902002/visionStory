@@ -158,4 +158,8 @@ export const PROMPT_CATALOG: Record<PromptId, PromptCatalogEntry> = {
     pathStem: 'novel-promotion/voice_analysis',
     variableKeys: ['input', 'characters_lib_name', 'characters_introduction', 'storyboard_json'],
   },
+  [PROMPT_IDS.NP_VIDEO_PROMPT_EXPANSION]: {
+    pathStem: 'novel-promotion/video_prompt_expansion',
+    variableKeys: ['prompt_input'],
+  },
 }

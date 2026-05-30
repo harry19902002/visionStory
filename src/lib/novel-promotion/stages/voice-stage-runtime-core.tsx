@@ -143,6 +143,7 @@ export function useVoiceStageRuntime({
     submittingVoiceLineIds,
   })
   useVoiceRuntimeSync({
+    projectId,
     loadData,
     voiceLines,
     activeVoiceTaskLineIds,

@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '@/lib/api-fetch'
+import { clearTaskTargetOverlay } from '@/lib/query/task-target-overlay'
 import type {
   PendingVoiceGenerationMap,
   PendingVoiceGenerationState,
@@ -10,6 +12,7 @@ import type {
 } from './types'
 
 interface UseVoiceRuntimeSyncParams {
+  projectId: string
   loadData: () => Promise<void>
   voiceLines: VoiceLine[]
   activeVoiceTaskLineIds: Set<string>
@@ -85,6 +88,7 @@ async function fetchTaskStatus(taskId: string): Promise<{
 }
 
 export function useVoiceRuntimeSync({
+  projectId,
   loadData,
   voiceLines,
   activeVoiceTaskLineIds,
@@ -92,6 +96,7 @@ export function useVoiceRuntimeSync({
   setPendingVoiceGenerationByLineId,
   onTaskFailure,
 }: UseVoiceRuntimeSyncParams) {
+  const queryClient = useQueryClient()
   const reportedFailedTaskIdsRef = useRef<Set<string>>(new Set())
   const pendingEntries = Object.entries(pendingVoiceGenerationByLineId)
   const pendingLineIds = pendingEntries.map(([lineId]) => lineId)
@@ -127,6 +132,9 @@ export function useVoiceRuntimeSync({
         const failed = pending.taskStatus === 'failed'
         const settled = pending.taskStatus === 'completed' && hasLineGenerationSettled(line, pending)
         if (failed || settled) {
+          if (failed) {
+            clearTaskTargetOverlay(queryClient, { projectId, targetType: 'NovelPromotionVoiceLine', targetId: lineId })
+          }
           delete next[lineId]
           changed = true
         }
@@ -136,6 +144,8 @@ export function useVoiceRuntimeSync({
   }, [
     activeVoiceTaskLineIds,
     pendingLineIds.length,
+    projectId,
+    queryClient,
     setPendingVoiceGenerationByLineId,
     voiceLines,
   ])

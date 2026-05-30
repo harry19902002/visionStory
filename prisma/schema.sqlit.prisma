@@ -486,6 +486,7 @@ model NovelPromotionVoiceLine {
   updatedAt           DateTime              @default(now()) @updatedAt
   emotionPrompt       String?
   emotionStrength     Float?                @default(0.4)
+  voiceInstruction    String?
   matchedPanelIndex   Int?
   matchedStoryboardId String?
   audioDuration       Int?

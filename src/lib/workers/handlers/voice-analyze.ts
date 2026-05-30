@@ -125,6 +125,7 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
     speaker: string
     content: string
     emotionStrength: number
+    voiceInstruction: string | null
     matchedPanelId: string | null
     matchedStoryboardId: string | null
     matchedPanelIndex: number | null
@@ -174,9 +175,12 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
           if (typeof lineData.content !== 'string' || !lineData.content.trim()) {
             throw new Error(`voice line ${index + 1} is missing valid content`)
           }
-          if (typeof lineData.emotionStrength !== 'number' || !Number.isFinite(lineData.emotionStrength)) {
-            throw new Error(`voice line ${index + 1} is missing valid emotionStrength`)
-          }
+          const emotionStrength = (typeof lineData.emotionStrength === 'number' && Number.isFinite(lineData.emotionStrength))
+            ? Math.min(1, Math.max(0.1, lineData.emotionStrength))
+            : 0.4
+          const voiceInstruction = typeof lineData.voiceInstruction === 'string' && lineData.voiceInstruction.trim()
+            ? lineData.voiceInstruction.trim()
+            : null
 
           const matchedPanel = lineData.matchedPanel
           if (!matchedPanel) {
@@ -184,7 +188,8 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
               lineIndex,
               speaker: lineData.speaker.trim(),
               content: lineData.content,
-              emotionStrength: Math.min(1, Math.max(0.1, lineData.emotionStrength)),
+              emotionStrength,
+              voiceInstruction,
               matchedPanelId: null,
               matchedStoryboardId: null,
               matchedPanelIndex: null,
@@ -207,7 +212,8 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
               lineIndex,
               speaker: lineData.speaker.trim(),
               content: lineData.content,
-              emotionStrength: Math.min(1, Math.max(0.1, lineData.emotionStrength)),
+              emotionStrength,
+              voiceInstruction,
               matchedPanelId: null,
               matchedStoryboardId: null,
               matchedPanelIndex: null,
@@ -218,7 +224,8 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
             lineIndex,
             speaker: lineData.speaker.trim(),
             content: lineData.content,
-            emotionStrength: Math.min(1, Math.max(0.1, lineData.emotionStrength)),
+            emotionStrength,
+            voiceInstruction,
             matchedPanelId: panelId,
             matchedStoryboardId: storyboardId,
             matchedPanelIndex: panelIndex,
@@ -282,6 +289,7 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
           speaker: lineData.speaker,
           content: lineData.content,
           emotionStrength: lineData.emotionStrength,
+          voiceInstruction: lineData.voiceInstruction,
           matchedPanelId: lineData.matchedPanelId,
           matchedStoryboardId: lineData.matchedStoryboardId,
           matchedPanelIndex: lineData.matchedPanelIndex,
@@ -290,6 +298,7 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
           speaker: lineData.speaker,
           content: lineData.content,
           emotionStrength: lineData.emotionStrength,
+          voiceInstruction: lineData.voiceInstruction,
           matchedPanelId: lineData.matchedPanelId,
           matchedStoryboardId: lineData.matchedStoryboardId,
           matchedPanelIndex: lineData.matchedPanelIndex,

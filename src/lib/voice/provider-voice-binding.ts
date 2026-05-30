@@ -1,6 +1,6 @@
 type VoiceSource = 'character' | 'speaker'
 
-export type SupportedAudioProviderKey = 'fal' | 'bailian' | 'minimax'
+export type SupportedAudioProviderKey = 'fal' | 'bailian' | 'minimax' | 'ark' | 'ark-speech'
 
 export interface CharacterVoiceFields {
   customVoiceUrl?: string | null
@@ -41,7 +41,18 @@ export type MinimaxSpeakerVoiceEntry = {
   previewAudioUrl?: string
 }
 
-export type SpeakerVoiceEntry = FalSpeakerVoiceEntry | BailianSpeakerVoiceEntry | MinimaxSpeakerVoiceEntry
+export type ArkSpeakerVoiceEntry = {
+  provider: 'ark'
+  voiceType: string
+  voiceId: string
+  speed?: number
+  pitch?: number
+  vol?: number
+  instruction?: string
+  previewAudioUrl?: string
+}
+
+export type SpeakerVoiceEntry = FalSpeakerVoiceEntry | BailianSpeakerVoiceEntry | MinimaxSpeakerVoiceEntry | ArkSpeakerVoiceEntry
 export type SpeakerVoiceMap = Record<string, SpeakerVoiceEntry>
 
 export type FalVoiceGenerationBinding = {
@@ -65,7 +76,17 @@ export type MinimaxVoiceGenerationBinding = {
   vol?: number
 }
 
-export type VoiceGenerationBinding = FalVoiceGenerationBinding | BailianVoiceGenerationBinding | MinimaxVoiceGenerationBinding
+export type ArkVoiceGenerationBinding = {
+  provider: 'ark'
+  source: VoiceSource
+  voiceId: string
+  speed?: number
+  pitch?: number
+  vol?: number
+  instruction?: string
+}
+
+export type VoiceGenerationBinding = FalVoiceGenerationBinding | BailianVoiceGenerationBinding | MinimaxVoiceGenerationBinding | ArkVoiceGenerationBinding
 
 export type SpeakerVoicePatch =
   | {
@@ -86,6 +107,16 @@ export type SpeakerVoicePatch =
     speed?: number
     pitch?: number
     vol?: number
+    previewAudioUrl?: string
+  }
+  | {
+    provider: 'ark'
+    voiceType?: string
+    voiceId: string
+    speed?: number
+    pitch?: number
+    vol?: number
+    instruction?: string
     previewAudioUrl?: string
   }
 
@@ -147,6 +178,22 @@ function normalizeRawSpeakerVoiceEntry(raw: unknown, speaker: string): SpeakerVo
     }
   }
 
+  if (provider === 'ark' || provider === 'ark-speech') {
+    if (!voiceId) {
+      throw new Error(`SPEAKER_VOICE_ENTRY_INVALID_ARK_VOICE_ID: ${speaker}`)
+    }
+    const preview = previewAudioUrl || audioUrl
+    return {
+      provider: 'ark',
+      voiceType,
+      voiceId,
+      ...(typeof entry.speed === 'number' ? { speed: entry.speed } : {}),
+      ...(typeof entry.pitch === 'number' ? { pitch: entry.pitch } : {}),
+      ...(typeof entry.vol === 'number' ? { vol: entry.vol } : {}),
+      ...(preview ? { previewAudioUrl: preview } : {}),
+    }
+  }
+
   if (provider) {
     throw new Error(`SPEAKER_VOICE_ENTRY_INVALID_PROVIDER: ${speaker}`)
   }
@@ -198,7 +245,7 @@ export function parseSpeakerVoiceMap(raw: string | null | undefined): SpeakerVoi
 }
 
 function normalizeProviderKey(providerKey: string): SupportedAudioProviderKey | null {
-  if (providerKey === 'fal' || providerKey === 'bailian' || providerKey === 'minimax') {
+  if (providerKey === 'fal' || providerKey === 'bailian' || providerKey === 'minimax' || providerKey === 'ark' || providerKey === 'ark-speech') {
     return providerKey
   }
   return null
@@ -249,6 +296,36 @@ function toMinimaxBinding(source: VoiceSource, voiceId: string | null, speakerVo
   }
 }
 
+function toArkBinding(source: VoiceSource, voiceId: string | null, speakerVoice?: SpeakerVoiceEntry | null): ArkVoiceGenerationBinding | null {
+  if (!voiceId) return null
+
+  let actualVoiceId = voiceId;
+  let speed: number | undefined;
+  let pitch: number | undefined;
+  let vol: number | undefined;
+  let instruction: string | undefined;
+
+  // Character config might encode settings inside voiceId like: "voiceId|speed|pitch|vol|instruction"
+  if (source === 'character' && voiceId.includes('|')) {
+    const parts = voiceId.split('|');
+    actualVoiceId = parts[0];
+    if (parts.length > 1 && parts[1]) speed = parseFloat(parts[1]);
+    if (parts.length > 2 && parts[2]) pitch = parseInt(parts[2]);
+    if (parts.length > 3 && parts[3]) vol = parseFloat(parts[3]);
+    if (parts.length > 4 && parts[4]) instruction = parts[4];
+  }
+
+  return {
+    provider: 'ark',
+    source,
+    voiceId: actualVoiceId,
+    ...(instruction ? { instruction } : {}),
+    ...(speed !== undefined ? { speed } : (speakerVoice?.provider === 'ark' && typeof speakerVoice.speed === 'number' ? { speed: speakerVoice.speed } : {})),
+    ...(pitch !== undefined ? { pitch } : (speakerVoice?.provider === 'ark' && typeof speakerVoice.pitch === 'number' ? { pitch: speakerVoice.pitch } : {})),
+    ...(vol !== undefined ? { vol } : (speakerVoice?.provider === 'ark' && typeof speakerVoice.vol === 'number' ? { vol: speakerVoice.vol } : {})),
+  }
+}
+
 export function resolveVoiceBindingForProvider(params: {
   providerKey: string
   character?: CharacterVoiceFields | null
@@ -272,6 +349,13 @@ export function resolveVoiceBindingForProvider(params: {
     if (fromCharacter) return fromCharacter
     if (params.speakerVoice?.provider !== 'minimax') return null
     return toMinimaxBinding('speaker', readTrimmedString(params.speakerVoice.voiceId), params.speakerVoice)
+  }
+
+  if (providerKey === 'ark' || providerKey === 'ark-speech') {
+    const fromCharacter = toArkBinding('character', characterVoiceId, params.speakerVoice)
+    if (fromCharacter) return fromCharacter
+    if (params.speakerVoice?.provider !== 'ark') return null
+    return toArkBinding('speaker', readTrimmedString(params.speakerVoice.voiceId), params.speakerVoice)
   }
 
   const fromCharacter = toBailianBinding('character', characterVoiceId)
