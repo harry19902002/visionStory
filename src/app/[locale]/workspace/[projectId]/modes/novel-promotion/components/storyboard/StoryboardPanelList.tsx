@@ -81,7 +81,7 @@ export default function StoryboardPanelList({
   const isVertical = ASPECT_RATIO_CONFIGS[videoRatio]?.isVertical ?? false
 
   return (
-    <div className={`grid gap-4 ${isVertical ? 'grid-cols-5' : 'grid-cols-3'} ${isSubmittingStoryboardTextTask ? 'opacity-50 pointer-events-none' : ''}`}>
+    <div className={`flex flex-col gap-6 ${isSubmittingStoryboardTextTask ? 'opacity-50 pointer-events-none' : ''}`}>
       {textPanels.map((panel, index) => {
         const imageUrl = displayImages[index]
         const globalPanelNumber = storyboardStartIndex + index + 1

@@ -58,7 +58,7 @@ export default function VideoPanelCardBody({ runtime }: VideoPanelCardBodyProps)
         {panel.textPanel?.duration && <span className="text-[var(--glass-text-tertiary)]">{panel.textPanel.duration}{t('promptModal.duration')}</span>}
       </div>
 
-      <p className="text-sm text-[var(--glass-text-secondary)] line-clamp-2">{panel.textPanel?.description}</p>
+      <p className="text-sm text-[var(--glass-text-secondary)]">{panel.textPanel?.description}</p>
 
       <div className="mt-3 pt-3 border-t border-[var(--glass-stroke-base)]">
         {(showsIncomingLinkBadge || showsOutgoingLinkBadge) && (
@@ -110,7 +110,7 @@ export default function VideoPanelCardBody({ runtime }: VideoPanelCardBodyProps)
                 </div>
               </div>
             ) : (
-              <div onClick={promptEditor.handleStartEdit} className="text-xs p-2 border border-[var(--glass-stroke-base)] rounded-lg bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)] cursor-pointer">
+              <div onClick={promptEditor.handleStartEdit} className="text-xs p-2 border border-[var(--glass-stroke-base)] rounded-lg bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)] cursor-pointer break-words whitespace-pre-wrap">
                 {promptEditor.localPrompt || <span className="text-[var(--glass-text-tertiary)] italic">{t('panelCard.clickToEditPrompt')}</span>}
               </div>
             )}

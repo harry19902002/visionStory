@@ -47,46 +47,48 @@ export default function PromptListCardView({ runtime }: PromptListCardViewProps)
   } = runtime
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="flex flex-col gap-6">
       {shots.map((shot) => {
         const shotRunningState = getShotRunningState(shot)
         const isEditing = editingPrompt?.shotId === shot.id && editingPrompt?.field === 'imagePrompt'
         const promptContent = shot.imagePrompt ? parseImagePrompt(shot.imagePrompt).content : ''
 
         return (
-          <div key={shot.id} className="card-base overflow-hidden">
-            <div className="aspect-video bg-[var(--glass-bg-muted)] flex items-center justify-center relative">
-              {shot.imageUrl ? (
-                <MediaImageWithLoading
-                  src={shot.imageUrl}
-                  alt={`${t('panel.shot')}${shot.shotId}`}
-                  containerClassName="w-full h-full"
-                  className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => setPreviewImage(shot.imageUrl)}
-                />
-              ) : (
-                <AppIcon name="video" className="w-16 h-16 text-[var(--glass-text-tertiary)]" />
-              )}
-              <div className="absolute top-2 left-2 bg-[var(--glass-overlay)] text-white px-2 py-1 rounded text-xs font-medium">
-                #{shot.shotId}
+          <div key={shot.id} className="card-base overflow-hidden flex flex-col md:flex-row">
+            <div className="w-full md:w-[200px] lg:w-[240px] shrink-0 bg-[var(--glass-bg-muted)] flex flex-col justify-center relative border-b md:border-b-0 md:border-r border-[var(--glass-stroke-base)] min-h-[135px] md:min-h-0">
+              <div className="w-full aspect-video bg-[var(--glass-bg-muted)] flex items-center justify-center relative overflow-hidden">
+                {shot.imageUrl ? (
+                  <MediaImageWithLoading
+                    src={shot.imageUrl}
+                    alt={`${t('panel.shot')}${shot.shotId}`}
+                    containerClassName="w-full h-full"
+                    className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setPreviewImage(shot.imageUrl)}
+                  />
+                ) : (
+                  <AppIcon name="video" className="w-16 h-16 text-[var(--glass-text-tertiary)]" />
+                )}
+                <div className="absolute top-2 left-2 bg-[var(--glass-overlay)] text-white px-2 py-1 rounded text-xs font-medium z-10">
+                  #{shot.shotId}
+                </div>
+                {shot.imageUrl && (
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onGenerateImage(shot.id, shotExtraAssets[shot.id])
+                    }}
+                    disabled={isBatchSubmitting}
+                    className="absolute top-2 right-2 bg-[var(--glass-overlay)] hover:bg-[var(--glass-text-primary)] text-white p-2 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed z-10"
+                    title={t('panel.regenerateImage')}
+                  >
+                    <AppIcon name="refresh" className="w-4 h-4" />
+                  </button>
+                )}
+                {isShotTaskRunning(shot) && <TaskStatusOverlay state={shotRunningState} />}
               </div>
-              {shot.imageUrl && (
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    onGenerateImage(shot.id, shotExtraAssets[shot.id])
-                  }}
-                  disabled={isBatchSubmitting}
-                  className="absolute top-2 right-2 bg-[var(--glass-overlay)] hover:bg-[var(--glass-text-primary)] text-white p-2 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed z-10"
-                  title={t('panel.regenerateImage')}
-                >
-                  <AppIcon name="refresh" className="w-4 h-4" />
-                </button>
-              )}
-              {isShotTaskRunning(shot) && <TaskStatusOverlay state={shotRunningState} />}
             </div>
 
-            <div className="p-5 space-y-4">
+            <div className="p-5 md:p-6 flex-1 space-y-4 flex flex-col min-w-0">
               {shot.imagePrompt && (
                 <div className="space-y-2 border-b pb-4">
                   <div className="flex items-center gap-2">

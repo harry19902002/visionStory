@@ -33,6 +33,7 @@ function buildVoiceLine(overrides: Partial<VoiceLine>): VoiceLine {
     content: '测试台词',
     emotionPrompt: null,
     emotionStrength: null,
+    voiceInstruction: null,
     audioUrl: null,
     updatedAt: '2026-03-07T12:00:00.000Z',
     lineTaskRunning: false,
@@ -70,6 +71,7 @@ describe('useVoiceRuntimeSync', () => {
     }
 
     useVoiceRuntimeSync({
+      projectId: 'project-1',
       loadData,
       voiceLines: [buildVoiceLine({
         audioUrl: '/m/voice-old.wav',
@@ -89,6 +91,7 @@ describe('useVoiceRuntimeSync', () => {
     expect(keepPendingUpdater?.(pendingGeneration)).toBe(pendingGeneration)
 
     useVoiceRuntimeSync({
+      projectId: 'project-1',
       loadData,
       voiceLines: [buildVoiceLine({
         audioUrl: '/m/voice-new.wav',
@@ -132,6 +135,7 @@ describe('useVoiceRuntimeSync', () => {
     })
 
     useVoiceRuntimeSync({
+      projectId: 'project-1',
       loadData,
       voiceLines: [buildVoiceLine({
         audioUrl: '/m/voice-old.wav',
@@ -177,6 +181,7 @@ describe('useVoiceRuntimeSync', () => {
     })
 
     useVoiceRuntimeSync({
+      projectId: 'project-1',
       loadData,
       voiceLines: [buildVoiceLine({
         id: 'line-9',
@@ -221,6 +226,7 @@ describe('useVoiceRuntimeSync', () => {
     })
 
     useVoiceRuntimeSync({
+      projectId: 'project-1',
       loadData,
       voiceLines: [buildVoiceLine({
         id: 'line-10',

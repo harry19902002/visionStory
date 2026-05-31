@@ -91,7 +91,7 @@ export default function PanelCard({
     <GlassSurface
       variant="elevated"
       padded={false}
-      className="relative h-full overflow-visible transition-all hover:shadow-[var(--glass-shadow-md)] group/card"
+      className="relative h-full overflow-visible transition-all hover:shadow-[var(--glass-shadow-md)] group/card flex flex-col md:flex-row"
       data-storyboard-id={storyboardId}
     >
       {/* 删除按钮 - 右上角外部 */}
@@ -106,7 +106,7 @@ export default function PanelCard({
       )}
 
       {/* 镜头图片区域 - 包含插入按钮 */}
-      <div className="relative">
+      <div className="relative w-full md:w-[200px] lg:w-[240px] shrink-0 border-b md:border-b-0 md:border-r border-[var(--glass-stroke-base)] flex flex-col justify-center">
         <ImageSection
           panelId={panel.id}
           imageUrl={imageUrl}
@@ -143,7 +143,7 @@ export default function PanelCard({
       </div>
 
       {/* 分镜信息编辑区 */}
-      <div className="p-3">
+      <div className="p-4 md:p-6 flex-1 flex flex-col min-w-0">
         <PanelEditForm
           panelData={panelData}
           isSaving={isSaving}

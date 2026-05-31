@@ -41,7 +41,7 @@ export default function PanelEditFormV2({
   const t = useTranslations('storyboard')
 
   return (
-    <div className={`ui-pattern-form ui-pattern-form-${uiMode} space-y-2`}>
+    <div className={`ui-pattern-form ui-pattern-form-${uiMode} space-y-3`}>
       {saveStatus === 'saving' || isSaving ? (
         <GlassChip tone="info" icon={<span className="h-2 w-2 animate-pulse rounded-full bg-current" />}>
           {t('common.saving')}

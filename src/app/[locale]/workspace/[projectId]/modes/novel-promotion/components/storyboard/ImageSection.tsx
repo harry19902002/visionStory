@@ -134,7 +134,7 @@ export default function ImageSection({
 
   return (
     <div
-      className={`relative overflow-hidden group rounded-t-2xl transition-all bg-[var(--glass-bg-muted)] ${isTaskPulseAnimating ? 'animate-brightness-boost' : ''}`}
+      className={`relative overflow-hidden group rounded-t-2xl md:rounded-2xl transition-all bg-[var(--glass-bg-muted)] ${isTaskPulseAnimating ? 'animate-brightness-boost' : ''}`}
       style={{ aspectRatio: cssAspectRatio }}
     >
       {isDeleting ? (
